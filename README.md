@@ -31,6 +31,12 @@ A comprehensive Flutter application for Safari park management in Yala National 
 - **Offline Resilience**: Offline-first incident caching ensures SOS packets are stored locally until cellular signal is regained.
 - **Keyboard Resilience**: Adaptive UI layouts that respond gracefully to keyboard overlays and varying screen densities.
 
+## Architecture Overview
+The system is built on a **Decoupled Service Architecture**:
+1. **Telemetry Layer**: Firebase Realtime Database for sub-second GPS updates.
+2. **Persistence Layer**: Supabase (PostgreSQL) for transactional data and media.
+3. **Application Layer**: Flutter for cross-platform hardware integration.
+
 ## Getting Started
 
 ### Prerequisites
