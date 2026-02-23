@@ -4,8 +4,8 @@ import '../../auth/screens/login_screen.dart';
 import '../../onboarding/onboarding_screen.dart';
 
 /// Splash screen shown briefly on app launch.
+/// Preliminary layout focusing on high-impact park branding.
 /// After 2 seconds it checks if onboarding was completed previously (via SharedPreferences),
-/// then routes appropriately to either the onboarding wizard or the main login screen.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
