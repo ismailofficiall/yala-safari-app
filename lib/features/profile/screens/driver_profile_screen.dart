@@ -7,9 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
-/// Screen responsible for displaying specific data bound to the logged-in driver.
-/// It reads the driver ID passed via routing, and fetches their realtime 
-/// telemetry and profile records directly from the Postgres database.
+/// Driver profile model for cross-referencing telemetry and database records.
 class DriverProfileScreen extends StatefulWidget {
   final String driverId;
 
