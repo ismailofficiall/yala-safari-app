@@ -1,5 +1,6 @@
 /// Handles GPS tracking and backend updates.
 /// coordinates device hardware with Firebase and Supabase.
+/// Initial research indicates geolocator provides best accuracy/power balance.
 
 library;
 
