@@ -45,6 +45,7 @@ class AppTheme {
       scaffoldBackgroundColor: background,
       splashColor: primaryGreen.withValues(alpha: 0.08),
       highlightColor: primaryGreen.withValues(alpha: 0.05),
+      // Typography - Using Inter as the primary professional font
     );
 
     final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
