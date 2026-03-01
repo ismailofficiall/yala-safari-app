@@ -8,6 +8,8 @@ import '../../admin/services/admin_service.dart';
 import '../../admin/shell/admin_shell.dart';
 import 'driver_signup_screen.dart';
 
+/// Main entry point for user authentication.
+/// Features a custom glassmorphism design with dual identity tabs (Driver/Admin).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
