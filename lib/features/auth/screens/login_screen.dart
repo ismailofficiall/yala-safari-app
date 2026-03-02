@@ -48,6 +48,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     super.dispose();
   }
 
+  // ──────────────── AUTHENTICATION FLOW ────────────────
+  // Step 1: Validate local input fields
+  // Step 2: Query Supabase/Firebase for credentials
+  // Step 3: Route to appropriate dashboard based on identity
+  
   // ──────────────── DRIVER LOGIN ────────────────
   Future<void> _loginDriver() async {
     final username = _usernameController.text.trim();
