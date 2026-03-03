@@ -58,9 +58,8 @@ class DriverApp extends StatelessWidget {
       // Initial Route determines which screen launches first.
       initialRoute: '/splash',
 
-      // Routes Map: A dictionary of key-value pairs defining the named
-      // routes for navigation throughout the app without needing to pass
-      // context deeply across files.
+      // Routes Map: Definitive system navigation manifest
+      // Link human-readable strings to widget constructors
       routes: {
         '/splash': (c) => const SplashScreen(),
         '/': (c) => const LoginScreen(),
