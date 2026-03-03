@@ -148,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) setState(() => _loading = false);
   }
 
+  // Helper dedicated to state-aware message broadcasting
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
