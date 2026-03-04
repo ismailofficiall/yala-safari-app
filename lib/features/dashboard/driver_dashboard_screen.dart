@@ -1,5 +1,6 @@
 /// Driver Dashboard Screen
 /// Primary home screen for a driver post-login.
+/// Implements a modular layout with high-visibility action tiles and SOS cluster.
 
 library;
 
