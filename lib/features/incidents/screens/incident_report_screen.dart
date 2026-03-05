@@ -16,6 +16,8 @@ import '../../../core/services/offline_sync_service.dart';
 import '../../../core/translations/app_translations.dart';
 import '../../../core/constants/app_theme.dart';
 
+/// Incident reporting core interface.
+/// Requires GPS validation and optional photo evidence for HQ verification.
 class IncidentReportScreen extends StatefulWidget {
   const IncidentReportScreen({super.key});
 
