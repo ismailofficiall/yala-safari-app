@@ -1,3 +1,5 @@
+/// Global translation dictionary for the Yala Driver ecosystem.
+/// Supports English (en), Sinhala (si), and Tamil (ta) for inclusive park operations.
 class AppTranslations {
   static Map<String, Map<String, String>> translations = {
     'en': {
