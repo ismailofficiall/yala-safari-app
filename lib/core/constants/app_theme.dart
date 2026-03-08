@@ -69,7 +69,9 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: darkText, size: 22),
       ),
-      cardTheme: CardThemeData(
+      // Landscape & Wide-screen layout considerations
+      // Ensure cards don't bridge the entire screen width on tablets.
+      cardTheme: CardTheme(
         elevation: 3,
         shadowColor: Colors.black.withValues(alpha: 0.05),
         color: surface,
