@@ -1,4 +1,5 @@
 /// Supabase Configuration & Backend Services
+/// Core Tables: drivers, incidents, messages, and wildlife_logs.
 /// Handles initialization and connection keys.
 
 library;
