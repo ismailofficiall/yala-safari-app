@@ -6,6 +6,7 @@ import 'supabase_client.dart';
 /// Service class dedicated to handling offline data persistence.
 /// Critical for Safari park operations where drivers frequently traverse 
 /// areas with zero cellular connectivity (e.g. deep inside Yala National Park).
+/// Implements a FIFO queue using local persistence and a retry loop.
 class OfflineSyncService {
   /// Defines the key used to store the serialized JSON queue inside SQLite/UserDefaults
   static const String key = 'offline_incidents';
