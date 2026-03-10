@@ -21,6 +21,7 @@ import 'core/translations/language_provider.dart';
 void main() async {
   // Ensures Flutter's core widget binding engine is initialized before 
   // attempting to communicate with native platform channels.
+  // Preloads core UI assets from the localized bundle.
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize Firebase configurations for background services.
