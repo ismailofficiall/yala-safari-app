@@ -10,6 +10,9 @@ import '../../../core/constants/app_theme.dart';
 import '../../../core/services/supabase_client.dart';
 import '../../../core/translations/app_translations.dart';
 
+/// Wildlife Logging Interface
+/// Specialized data entry screen for tracking animal sightings and behaviors.
+/// Integrates with the camera and GPS for verifiable field reports.
 class WildlifeLogScreen extends StatefulWidget {
   final String driverId;
   const WildlifeLogScreen({super.key, required this.driverId});
