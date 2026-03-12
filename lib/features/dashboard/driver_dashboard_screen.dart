@@ -122,6 +122,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
 
   void _startLocationService() {
     if (widget.driverId.isEmpty) return;
+    // Request hardware-level GPS and notification permissions
     try {
       _locationService.startTracking(widget.driverId);
     } catch (e, st) {
