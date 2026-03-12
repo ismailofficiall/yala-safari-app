@@ -24,6 +24,7 @@ class LocationService {
   DateTime? _lastProximityAlert;
   
   /// Battery-efficient polling interval for cloud writes (e.g. 15-20 seconds)
+  /// Balances real-time accuracy with device hardware longevity.
   static const int _reportIntervalSeconds = 18; 
 
   /// Whether periodic tracking is active
