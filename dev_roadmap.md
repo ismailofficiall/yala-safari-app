@@ -1,11 +1,12 @@
-# Phase 1: Core Command & Control (COMPLETED)
-- [x] GPS Real-time Telemetry (Firebase)
-- [x] Multi-role Auth (Driver/Admin via Supabase)
-- [x] SOS Panic Distribution System
-- [x] Localized UI (En/Si/Ta)
+# Dev Notes
 
-# Phase 2: Operational Intelligence (NEXT)
-- [ ] Predictive animal migration heatmaps.
-- [ ] Offline-first voice memo integration for logs.
-- [ ] Dynamic block reassignment based on tourist density.
-- [ ] In-app route optimization (Leaflet/Mapbox integration).
+## Done
+- GPS tracking with Firebase
+- Login for drivers and admins
+- SOS alert (long press)
+- Sinhala/Tamil/English support
+
+## Ideas for later
+- Heatmap showing where animals are usually spotted
+- Voice notes for wildlife logs
+- Reassign driver blocks based on how busy each area is

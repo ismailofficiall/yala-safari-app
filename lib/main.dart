@@ -1,6 +1,4 @@
-// Entry Point of the Yala Safari Driver Application
-// Handles core initialization and global status management.
-// Status: [FINAL COURSEWORK SUBMISSION - MARCH 2026]
+// Entry point for the Yala Safari Driver App.
 
 
 import 'package:flutter/material.dart';
@@ -31,9 +29,6 @@ void main() async {
   await SupabaseConfig.init();
 
   runApp(
-    // Wrap the entire app in a ChangeNotifierProvider to manage global 
-    // state. In this case, `LanguageProvider` will listen for locale
-    // changes and cause the sub-tree to rebuild automatically.
     ChangeNotifierProvider(
       create: (_) => LanguageProvider(),
       child: const DriverApp(),
@@ -59,8 +54,7 @@ class DriverApp extends StatelessWidget {
       // Initial Route determines which screen launches first.
       initialRoute: '/splash',
 
-      // Routes Map: Definitive system navigation manifest
-      // Link human-readable strings to widget constructors
+      // Named routes
       routes: {
         '/splash': (c) => const SplashScreen(),
         '/': (c) => const LoginScreen(),

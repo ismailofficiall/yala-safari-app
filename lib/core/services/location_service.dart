@@ -1,6 +1,4 @@
-/// Handles GPS tracking and backend updates.
-/// coordinates device hardware with Firebase and Supabase.
-/// Initial research indicates geolocator provides best accuracy/power balance.
+// GPS tracking service — writes location to Firebase and handles speeding alerts.
 
 library;
 
@@ -90,10 +88,6 @@ class LocationService {
     });
   }
 
-  // ===========================================================================
-  // CORE TELEMETRY OPERATIONS
-  // Processes GPS data and updates Firebase in real-time.
-  // ===========================================================================
 
   /// Force a single immediate location read+write to Firebase.
   /// Useful for debugging or manual triggers.

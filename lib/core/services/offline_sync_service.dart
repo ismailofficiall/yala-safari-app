@@ -18,14 +18,8 @@ class OfflineSyncService {
   /// @param payload The raw dictionary map generated from the IncidentReportScreen.
   static Future<void> saveOfflineIncident(Map<String, dynamic> payload) async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // Retrieve the existing queue or initialize an empty state list
     List<String> existing = prefs.getStringList(key) ?? [];
-    
-    // Append the newly stringified JSON bundle directly to the queue
     existing.add(jsonEncode(payload));
-    
-    // Overwrite the hardware memory with the newly extended list
     await prefs.setStringList(key, existing);
     debugPrint("Saved incident offline. Total queued: ${existing.length}");
   }
@@ -36,37 +30,33 @@ class OfflineSyncService {
   static Future<void> syncPendingIncidents() async {
     if (_isSyncing) return;
     _isSyncing = true;
-    
+
     final prefs = await SharedPreferences.getInstance();
     List<String> existing = prefs.getStringList(key) ?? [];
-    
-    // Fast-fail if there is no data to process, saving CPU cycles
-    if (existing.isEmpty) return;
 
-    // Temporal buffer to catch any payloads that fail to transmit during this specific loop
+    if (existing.isEmpty) {
+      _isSyncing = false;
+      return;
+    }
+
     List<String> failed = [];
     debugPrint("Syncing ${existing.length} offline incidents...");
 
     for (String item in existing) {
       try {
-        // Deserialize the cached string back into an executable Dart Map object
         final payload = jsonDecode(item) as Map<String, dynamic>;
-        
-        // Asynchronously insert the data payload to the cloud
         await SupabaseConfig.client.from('incidents').insert(payload);
         debugPrint("Successfully synced offline incident.");
       } catch (e) {
-        // If transmission fails (still no internet), push it back onto the fail buffer
         if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
-          debugPrint("[OfflineSync] Network unavailable. Retrying in next cycle.");
+          debugPrint("[OfflineSync] Network unavailable. Retrying later.");
         } else {
-          debugPrint("[OfflineSync] Payload rejection or DB error: $e");
+          debugPrint("[OfflineSync] DB error: $e");
         }
         failed.add(item);
       }
     }
 
-    // Overwrite the hardware memory. If all succeeded, `failed` is purely empty.
     await prefs.setStringList(key, failed);
     _isSyncing = false;
   }
