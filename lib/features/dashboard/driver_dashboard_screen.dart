@@ -406,6 +406,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   /// using the driver's current GPS coordinates to the Supabase incidents table.
   Widget _buildSosButton(BuildContext context) {
     return GestureDetector(
+      // Require long-press to prevent accidental SOS triggers during bumpy rides.
       onLongPress: () async {
         HapticFeedback.vibrate();
         // Long press required to prevent accidental triggers
