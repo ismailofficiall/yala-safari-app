@@ -68,6 +68,7 @@ class AppTheme {
           letterSpacing: -0.3,
         ),
         iconTheme: const IconThemeData(color: darkText, size: 22),
+        // Standardized touch-target icons for high-vibration safari environments.
       ),
       // Landscape & Wide-screen layout considerations
       // Ensure cards don't bridge the entire screen width on tablets.
