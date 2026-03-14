@@ -39,6 +39,10 @@ class LocationService {
     String driverId, {
     int intervalSeconds = 10,
   }) async {
+    if (driverId.isEmpty) {
+      debugPrint('[LocationService] startTracking: driverId is empty');
+      return;
+    }
     _db = FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: databaseUrl);
     debugPrint('[LocationService] startTracking for $driverId, DB: $databaseUrl');
 
