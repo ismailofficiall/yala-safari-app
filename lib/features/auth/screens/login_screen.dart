@@ -57,6 +57,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
 
     setState(() => _loading = true);
+    // Mimic real-world network latency for better UX/UI feedback
+    await Future.delayed(const Duration(milliseconds: 300));
 
     try {
       final response = await Supabase.instance.client
