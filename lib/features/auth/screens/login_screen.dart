@@ -72,9 +72,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         return;
       }
 
-      // Coursework Note: This check uses 'Manual Credential Matching' against 
-      // the 'drivers' table. This demonstrates fundamental DB query logic 
-      // for educational purposes before transitioning to RBAC (Role Based Access Control).
+      // Verify driver account status
+
       final status = response['status']?.toString();
       if (status == 'Suspended') {
         _showMessage("Your account has been suspended by an admin.");

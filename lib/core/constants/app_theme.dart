@@ -1,28 +1,21 @@
-/// =========================================================================
 /// Application Global Theme Configuration
-/// =========================================================================
-/// Defines the centralized visual design language for the application.
-/// 
-/// Coursework Note - Design Systems:
-/// Hardcoding colors (e.g., `Colors.red`) directly inside UI widgets is an 
-/// anti-pattern because modifying the app's brand colors would require changing 
-/// hundreds of files. By centralizing the Color constants and `ThemeData` here, 
-/// changing the brand identity takes only a few seconds globally.
-/// =========================================================================
+/// Defines the visual design language for the application.
+
 library;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryGreen = Color(0xFF1E5631); // Vibrant Safari Green
-  static const Color primaryGreenLight = Color(0xFF4C7A5D); // Bright Sage
-  static const Color accentGold = Color(0xFFDE911D); // Sunrise Gold
-  static const Color lightGreen = Color(0xFFB85135); // Red Clay
-  static const Color background = Color(0xFFF3F5F3); // Bright Stone
-  static const Color surface = Color(0xFFFFFFFF); // Pure White Cards
-  static const Color darkText = Color(0xFF121A13); // Deep Charcoal
-  static const Color greyText = Color(0xFF59665B); // Crisp Slate
+  static const Color primaryGreen = Color(0xFF1E5631);
+  static const Color primaryGreenLight = Color(0xFF4C7A5D);
+  static const Color accentGold = Color(0xFFDE911D);
+  static const Color lightGreen = Color(0xFFB85135);
+  static const Color background = Color(0xFFF3F5F3);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color darkText = Color(0xFF121A13);
+  static const Color greyText = Color(0xFF59665B);
+
 
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.light(

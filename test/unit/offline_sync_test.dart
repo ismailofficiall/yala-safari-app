@@ -25,8 +25,10 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final List<String>? queue = prefs.getStringList(testQueueKey);
 
-      expect(queue, isNotNull, reason: "The hardware queue should exist");
-      expect(queue!.length, 1, reason: "Queue should contain exactly 1 serialized element");
+      expect(queue, isNotNull);
+
+      expect(queue!.length, 1);
+
 
       final incidentData = jsonDecode(queue.first) as Map<String, dynamic>;
       expect(incidentData['title'], 'Elephant blocking road');
@@ -41,7 +43,8 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final List<String> queue = prefs.getStringList(testQueueKey)!;
 
-      expect(queue.length, 2, reason: "Both incidents should have safely appended to the array");
+      expect(queue.length, 2);
+
       
       final first = jsonDecode(queue[0]);
       final second = jsonDecode(queue[1]);

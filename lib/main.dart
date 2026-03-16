@@ -1,17 +1,6 @@
-// =========================================================================
 // Entry Point of the Yala Safari Driver Application
-// =========================================================================
-// This file serves as the main entry point for the Flutter application. 
-// It handles core initialization tasks such as binding the framework, 
-// initializing Firebase and Supabase services, setting up global state 
-// management (Providers), and defining the root routing structure.
-//
-// Coursework Note: 
-// Utilizing `runApp` with a `ChangeNotifierProvider` ensures that global
-// state (like language translation preferences) can be accessed from any 
-// screen deep within the widget tree without needing to pass variables 
-// manually through constructors.
-// =========================================================================
+// Handles core initialization and global status management.
+
 
 import 'package:flutter/material.dart';
 import 'core/services/supabase_client.dart';

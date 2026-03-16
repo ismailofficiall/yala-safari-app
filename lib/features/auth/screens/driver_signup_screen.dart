@@ -10,12 +10,8 @@ import '../../../core/constants/app_theme.dart';
 /// This connects directly to the Supabase 'drivers' table to create
 /// a new authenticated driver record.
 class DriverSignUpScreen extends StatefulWidget {
-  /// Coursework Note: 
-  /// This screen demonstrates 'Self-Registration' patterns. It uses a two-step 
-  /// verification process:
-  /// 1. Out-of-band verification (SMS OTP) to validate the phone number identity.
-  /// 2. Database persistence to store vehicle and credential metadata.
   const DriverSignUpScreen({super.key});
+
 
   @override
   State<DriverSignUpScreen> createState() => _DriverSignUpScreenState();
@@ -201,9 +197,8 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
       }
 
       // 2. Create Driver Record
-      // Coursework Note: In this educational implementation, passwords are 
-      // stored in a 'drivers' table for simplicity. In a production system, 
-      // these should be managed via Supabase Auth's encrypted identity tables.
+      // Insert record
+
       await _supabase.from('drivers').insert({
         'driver_name': _nameController.text.trim(),
         'driver_id_code': _idController.text.trim(),
