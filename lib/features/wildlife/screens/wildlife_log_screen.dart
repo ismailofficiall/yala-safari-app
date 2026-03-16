@@ -146,6 +146,21 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
             ),
             const SizedBox(height: 24),
             TextField(controller: _notesCtrl, maxLines: 3, decoration: InputDecoration(labelText: AppTranslations.t('notes') ?? "Notes", border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)))),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _selectedAnimal = null;
+                  _selectedBehaviour = 'Grazing';
+                  _pickedMedia = null;
+                  _notesCtrl.clear();
+                  _countCtrl.text = '1';
+                });
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reset Form'),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+            ),
             const SizedBox(height: 32),
             SizedBox(
               height: 56,
