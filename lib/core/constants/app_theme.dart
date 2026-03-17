@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryGreen = Color(0xFF1E5631);
-  static const Color primaryGreenLight = Color(0xFF4C7A5D);
-  static const Color accentGold = Color(0xFFDE911D);
-  static const Color lightGreen = Color(0xFFB85135);
+  static const Color primaryGreen = Color(0xFF1B4D2C);
+  static const Color primaryGreenLight = Color(0xFF437053);
+  static const Color accentGold = Color(0xFFD68A1B);
+  static const Color lightGreen = Color(0xFFA64930);
   static const Color background = Color(0xFFF3F5F3);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color darkText = Color(0xFF121A13);
