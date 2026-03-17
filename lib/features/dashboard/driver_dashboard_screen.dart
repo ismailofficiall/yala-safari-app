@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import '../map/screens/live_map_screen.dart';
 import '../../core/services/location_service.dart';
@@ -404,6 +405,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   Widget _buildSosButton(BuildContext context) {
     return GestureDetector(
       onLongPress: () async {
+        HapticFeedback.vibrate();
         // Long press required to prevent accidental triggers
         double? lat, lng;
         try {
@@ -543,7 +545,10 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
       shadowColor: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
