@@ -5,6 +5,11 @@ import '../../../core/constants/app_theme.dart';
 /// Displays an ordered leaderboard of all active drivers ranked by performance rating.
 /// Pulls live data from the `drivers` table in Supabase.
 /// Both drivers and admins can view this screen for motivation and benchmarking.
+/// 
+/// Ranking Logic:
+/// 1. Primary Sort: `rating` (descending) - higher is better.
+/// 2. Performance is based on customer feedback and speed compliance.
+/// 3. Updates in real-time as the driver's profile in Supabase is updated.
 class DriverLeaderboardScreen extends StatelessWidget {
   const DriverLeaderboardScreen({super.key});
 
