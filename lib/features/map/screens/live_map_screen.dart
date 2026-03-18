@@ -102,6 +102,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   );
                 }).toList();
 
+                if (!mounted) return;
                 setState(() {
                   _incidents
                     ..clear()
