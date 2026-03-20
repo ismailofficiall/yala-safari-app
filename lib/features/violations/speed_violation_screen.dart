@@ -55,7 +55,10 @@ class SpeedViolationHistoryScreen extends StatelessWidget {
             itemCount: violations.length,
             itemBuilder: (context, index) {
               final v = violations[index];
-              final date = v['created_at']?.toString().substring(0, 16) ?? 'Unknown';
+              final String rawDate = v['created_at']?.toString() ?? '';
+              final String date = rawDate.isNotEmpty 
+                  ? rawDate.substring(0, 16).replaceFirst('T', ' ') 
+                  : 'Unknown';
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
