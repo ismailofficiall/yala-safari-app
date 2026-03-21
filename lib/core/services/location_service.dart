@@ -86,6 +86,11 @@ class LocationService {
     });
   }
 
+  // ===========================================================================
+  // CORE TELEMETRY OPERATIONS
+  // Processes GPS data and updates Firebase in real-time.
+  // ===========================================================================
+
   /// Force a single immediate location read+write to Firebase.
   /// Useful for debugging or manual triggers.
   Future<void> sendLocationNow(String driverId) async {
