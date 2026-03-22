@@ -257,6 +257,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     backgroundImage: driverData?['image_url'] != null 
                         ? NetworkImage(driverData!['image_url']) 
                         : null,
+                    onBackgroundImageError: driverData?['image_url'] != null 
+                        ? (exception, stackTrace) => debugPrint('Error loading profile image') 
+                        : null,
                     child: driverData?['image_url'] == null 
                         ? const Icon(Icons.person, size: 60, color: AppTheme.primaryGreen) 
                         : null,
