@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin_theme.dart';
+import 'admin_chat_screen.dart';
 
 class DriverDetails extends StatelessWidget {
   final Map<String, dynamic> driver;
@@ -94,9 +95,9 @@ class DriverDetails extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.tonalIcon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.route_rounded),
-                    label: const Text('Trip history'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminChatScreen(driverId: d['id'].toString()))),
+                    icon: const Icon(Icons.chat_bubble_outline_rounded),
+                    label: const Text('Message Driver'),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -118,6 +119,15 @@ class DriverDetails extends StatelessWidget {
                         await supabase.from('drivers').update({
                           'status': isActive ? 'Suspended' : 'Active',
                         }).eq('id', d['id']);
+
+                        // Insert a record into the audit log for the dashboard timeline
+                        await supabase.from('audit_logs').insert({
+                          'action': isActive ? 'Driver Suspended' : 'Driver Reactivated',
+                          'entity': d['driver_name'] ?? 'Unknown Driver',
+                          'performed_by': 'Admin',
+                          'created_at': DateTime.now().toIso8601String(),
+                        });
+
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -166,4 +176,5 @@ class DriverDetails extends StatelessWidget {
       ),
     );
   }
+
 }

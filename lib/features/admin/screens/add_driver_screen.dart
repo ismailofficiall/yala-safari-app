@@ -49,6 +49,14 @@ class _AddDriverScreenState extends State<AddDriverScreen> {
           'rating': 5.0,
         });
 
+        // Insert record into the audit log
+        await _supabase.from('audit_logs').insert({
+          'action': 'New Driver Added',
+          'entity': _nameController.text.trim(),
+          'performed_by': 'Admin',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,8 +64,7 @@ class AdminParkMap extends StatelessWidget {
               for (final i in incidents) {
                 final p = parseLatLngFromRow(i);
                 if (p == null) continue;
-                final title = i['title']?.toString() ?? 'Incident';
-                incidentMarkers.add(_buildIncidentMarker(p, title));
+                incidentMarkers.add(_buildIncidentMarker(context, p, i));
               }
 
               final hasAnyPoint = jeepMarkers.isNotEmpty || incidentMarkers.isNotEmpty;
@@ -75,6 +75,15 @@ class AdminParkMap extends StatelessWidget {
                     options: MapOptions(
                       initialCenter: _yalaCenter,
                       initialZoom: 11.5,
+                      minZoom: 10.0,
+                      maxZoom: 18.0,
+                      // Constrain Admin view to Yala bounds
+                      cameraConstraint: CameraConstraint.contain(
+                        bounds: LatLngBounds(
+                          const LatLng(6.1500, 81.1000), 
+                          const LatLng(6.5500, 81.6000), 
+                        ),
+                      ),
                       interactionOptions: const InteractionOptions(
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       ),
@@ -83,6 +92,7 @@ class AdminParkMap extends StatelessWidget {
                       TileLayer(
                         urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.example.yala_driver_app_1',
+                        tileProvider: CancellableNetworkTileProvider(),
                       ),
                       MarkerLayer(markers: jeepMarkers),
                       MarkerLayer(markers: incidentMarkers),
@@ -150,17 +160,55 @@ class AdminParkMap extends StatelessWidget {
     );
   }
 
-  static Marker _buildIncidentMarker(LatLng point, String type) {
+  static Marker _buildIncidentMarker(BuildContext context, LatLng point, Map<String, dynamic> item) {
+    final String type = item['type']?.toString() ?? 'Incident';
+    
     return Marker(
       point: point,
       width: 50,
       height: 50,
-      child: Tooltip(
-        message: type,
-        child: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-          child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+      child: GestureDetector(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: AdminTheme.surface,
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+            builder: (_) => Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    type.toUpperCase(),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                  ),
+                  const SizedBox(height: 10),
+                  if (item['note'] != null && '${item['note']}'.trim().isNotEmpty)
+                    Text('Driver Note:\n${item['note']}'),
+                  const SizedBox(height: 10),
+                  if (item['image_url'] != null && '${item['image_url']}'.trim().isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        '${item['image_url']}',
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Text("Failed to load image", style: TextStyle(color: Colors.red)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+        child: Tooltip(
+          message: type,
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+            child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+          ),
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../admin_theme.dart';
 import '../screens/admin_dashboard_screen.dart';
 import '../screens/admin_incident_screen.dart';
+import '../screens/admin_analytics_screen.dart';
+import '../screens/admin_audit_log_screen.dart';
 import '../widgets/admin_park_map.dart';
 
 class AdminShell extends StatefulWidget {
@@ -14,10 +16,13 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
 
+  /// All top-level admin pages accessible via the bottom navigation bar
   final List<Widget> _pages = const [
     AdminDashboardScreen(),
     AdminParkMap(),
     AdminIncidentScreen(),
+    AdminAnalyticsScreen(),
+    AdminAuditLogScreen(),
   ];
 
   @override
@@ -57,6 +62,16 @@ class _AdminShellState extends State<AdminShell> {
                     icon: Icon(Icons.warning_amber_outlined),
                     selectedIcon: Icon(Icons.warning_rounded),
                     label: 'Incidents',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.bar_chart_outlined),
+                    selectedIcon: Icon(Icons.bar_chart_rounded),
+                    label: 'Analytics',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.history_outlined),
+                    selectedIcon: Icon(Icons.history_rounded),
+                    label: 'Audit Log',
                   ),
                 ],
               ),

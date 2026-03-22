@@ -1,14 +1,19 @@
 // lib/features/dashboard/driver_dashboard_screen.dart
 import 'package:flutter/material.dart';
-import '../../../features/map/screens/live_map_screen.dart';
-import '../../../core/services/location_service.dart';
-import '../../../features/incidents/screens/incident_report_screen.dart';
-import '../../../core/translations/app_translations.dart';
-import '../../../features/messages/screens/message_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import '../map/screens/live_map_screen.dart';
+import '../../core/services/location_service.dart';
+import '../incidents/screens/incident_report_screen.dart';
+import '../../core/translations/app_translations.dart';
+import '../messages/screens/message_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/constants/app_theme.dart';
+import '../../core/constants/app_theme.dart';
 import '../auth/screens/login_screen.dart';
 import '../profile/screens/driver_profile_screen.dart';
+import '../wildlife/screens/wildlife_log_screen.dart';
+import '../leaderboard/driver_leaderboard_screen.dart';
+import '../violations/speed_violation_screen.dart';
+import 'widgets/weather_widget.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
   final String driverId;
@@ -183,7 +188,16 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               ],
             ),
             
+            const SizedBox(height: 20),
+
+            // Live weather card for Yala National Park (fetched via Open-Meteo API)
+            const YalaWeatherWidget(),
             const SizedBox(height: 32),
+
+            // SOS Panic Button — always prominently displayed
+            _buildSosButton(context),
+            const SizedBox(height: 32),
+
             Text('Quick actions', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 14),
 
@@ -207,6 +221,35 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const IncidentReportScreen()));
               },
+            ),
+            const SizedBox(height: 12),
+
+            _buildActionItem(
+              context: context,
+              label: 'Log Wildlife Encounter',
+              icon: Icons.pets_rounded,
+              color: Colors.teal,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WildlifeLogScreen(driverId: widget.driverId))),
+            ),
+            const SizedBox(height: 12),
+
+            // Driver leaderboard link
+            _buildActionItem(
+              context: context,
+              label: 'Driver Leaderboard',
+              icon: Icons.leaderboard_rounded,
+              color: AppTheme.accentGold,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverLeaderboardScreen())),
+            ),
+            const SizedBox(height: 12),
+
+            // Speed violation history for this driver
+            _buildActionItem(
+              context: context,
+              label: 'My Speed Violations',
+              icon: Icons.speed_rounded,
+              color: Colors.deepOrange,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpeedViolationHistoryScreen(driverId: widget.driverId))),
             ),
             const SizedBox(height: 12),
 
@@ -237,6 +280,70 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 );
               },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds a large bright red SOS panic button that auto-submits an emergency incident
+  /// using the driver's current GPS coordinates to the Supabase incidents table.
+  Widget _buildSosButton(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () async {
+        // Long press required to prevent accidental triggers
+        double? lat, lng;
+        try {
+          final pos = await Geolocator.getCurrentPosition();
+          lat = pos.latitude;
+          lng = pos.longitude;
+        } catch (_) {}
+
+        try {
+          await Supabase.instance.client.from('incidents').insert({
+            'title': 'SOS EMERGENCY — Driver ${widget.driverId}',
+            'type': 'Emergency',
+            'note': 'PANIC BUTTON ACTIVATED. Immediate assistance required.',
+            'latitude': lat ?? 0.0,
+            'longitude': lng ?? 0.0,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🚨 SOS Emergency sent to HQ!'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('SOS failed: $e'), backgroundColor: Colors.red));
+          }
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFB71C1C), Color(0xFFE53935)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.red.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.sos_rounded, color: Colors.white, size: 40),
+            const SizedBox(height: 6),
+            const Text('SOS EMERGENCY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.5)),
+            const SizedBox(height: 4),
+            Text('Hold to activate panic alert', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
           ],
         ),
       ),

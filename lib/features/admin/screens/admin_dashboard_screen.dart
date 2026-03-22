@@ -31,6 +31,7 @@ class AdminDashboardScreen extends StatelessWidget {
         actions: const [AdminAppBarActions()],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'dashboard_new_driver_fab',
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => const AddDriverScreen()));
         },

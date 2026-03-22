@@ -11,8 +11,14 @@ class LocationService {
   FirebaseDatabase? _db;
   Timer? _timer;
   
-  // Cooldown for automatic speeding alerts (5 minutes)
+  /// Cooldown timer for automatic speeding reports (prevents spam)
   DateTime? _lastSpeedAlert;
+  
+  /// Cooldown timer for proximity zone warnings (prevents repeated alerts)
+  DateTime? _lastProximityAlert;
+  
+  /// Known restricted zone boundaries (loaded once per session)
+  final List<Map<String, dynamic>> _zoneBoundaries = [];
 
   /// Whether periodic tracking is active
   bool get isTracking => _timer != null;
@@ -136,12 +142,12 @@ class LocationService {
 
     try {
       final speedKmh = (pos.speed * 3.6).toStringAsFixed(1);
-      final title = "Speeding Violation";
+      const title = "Speeding Violation";
       final note = "AUTOMATED ALERT: Jeep exceeded the park speed limit and was traveling at $speedKmh km/h. Driver ID: $driverId";
 
       await Supabase.instance.client.from('incidents').insert({
         "title": title,
-        "type": "Other", // Categorize as Other or Speeding
+        "type": "Other",
         "note": note,
         "latitude": pos.latitude,
         "longitude": pos.longitude,
@@ -150,6 +156,51 @@ class LocationService {
       print('[LocationService] Automatically reported speeding incident!');
     } catch (e) {
       print("[LocationService] Failed to auto-report speeding: $e");
+    }
+  }
+
+  /// Calculates approximate distance in meters between two GPS coordinates.
+  /// Uses Euclidean approximation valid for small distances (< 5 km).
+  double _approxDistanceMeters(double lat1, double lng1, double lat2, double lng2) {
+    const metersPerDegLat = 111320.0; // Mean Earth radius approximation
+    final dLat = (lat2 - lat1) * metersPerDegLat;
+    final dLng = (lng2 - lng1) * metersPerDegLat * 0.8; // cosine approx at 6 degrees latitude
+    return (dLat * dLat + dLng * dLng).abs().toDouble();
+  }
+
+  /// Checks if the driver is within 50 meters of any known restricted zone boundary centroid.
+  /// Triggers a Supabase incident log if the proximity threshold is breached, with a 3-minute cooldown.
+  Future<void> _checkZoneProximity(String driverId, Position pos) async {
+    if (_lastProximityAlert != null && DateTime.now().difference(_lastProximityAlert!).inMinutes < 3) {
+      return;
+    }
+
+    try {
+      final zones = await Supabase.instance.client.from('restricted_zones').select();
+      for (final zone in zones) {
+        final double? zoneLat = (zone['center_lat'] as num?)?.toDouble();
+        final double? zoneLng = (zone['center_lng'] as num?)?.toDouble();
+        if (zoneLat == null || zoneLng == null) continue;
+
+        // Distance squared check (avoids square root calculation — threshold = 50^2 = 2500)
+        final dist = _approxDistanceMeters(pos.latitude, pos.longitude, zoneLat, zoneLng);
+        if (dist < 2500) {
+          // Driver is within approximately 50 meters of the zone centroid — trigger warning
+          _lastProximityAlert = DateTime.now();
+          await Supabase.instance.client.from('incidents').insert({
+            'title': 'PROXIMITY WARNING — ${zone['name'] ?? 'Restricted Zone'}',
+            'type': 'Other',
+            'note': 'Driver $driverId is approaching a restricted zone boundary.',
+            'latitude': pos.latitude,
+            'longitude': pos.longitude,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          print('[LocationService] Zone proximity alert triggered for ${zone['name']}');
+          break; // Only raise one alert per cycle
+        }
+      }
+    } catch (e) {
+      print('[LocationService] Proximity check failed: $e');
     }
   }
 

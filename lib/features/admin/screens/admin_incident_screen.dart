@@ -29,6 +29,14 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> with SingleTi
   Future<void> _markAsResolved(String id) async {
     try {
       await _supabase.from('incidents').update({'is_resolved': true}).eq('id', id);
+      
+      await _supabase.from('audit_logs').insert({
+        'action': 'Incident Resolved',
+        'entity': 'Incident ID: $id',
+        'performed_by': 'Admin',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Incident marked resolved'), backgroundColor: AdminTheme.primaryGreen),
@@ -64,12 +72,23 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> with SingleTi
               ),
               const SizedBox(height: 8),
               Text(
-                '${item['location_name'] ?? 'Location unknown'} · ${_formatDate(item['created_at'])}',
+                'Lat: ${item['latitude'] ?? '?'} Lng: ${item['longitude'] ?? '?'} · ${_formatDate(item['created_at'])}',
                 style: const TextStyle(color: AdminTheme.greyText, fontWeight: FontWeight.w500),
               ),
-              if (item['description'] != null && '${item['description']}'.trim().isNotEmpty) ...[
+              if (item['note'] != null && '${item['note']}'.trim().isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('${item['description']}', style: const TextStyle(height: 1.4)),
+                Text('Driver Notes:\n${item['note']}', style: const TextStyle(height: 1.4)),
+              ],
+              if (item['image_url'] != null && '${item['image_url']}'.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    '${item['image_url']}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Text('Could not load image', style: TextStyle(color: Colors.red)),
+                  ),
+                ),
               ],
               if (!isResolved) ...[
                 const SizedBox(height: 24),
@@ -201,7 +220,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> with SingleTi
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '${item['location_name'] ?? 'Unknown'} · ${_formatDate(item['created_at'])}',
+                      '${item['type'] ?? 'Unknown'} · ${_formatDate(item['created_at'])}',
                       style: const TextStyle(color: AdminTheme.greyText, fontSize: 13),
                     ),
                   ),

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_theme.dart';
 
+/// Screen responsible for handling new driver self-registration.
+/// This connects directly to the Supabase 'drivers' table to create
+/// a new authenticated driver record.
 class DriverSignUpScreen extends StatefulWidget {
   const DriverSignUpScreen({super.key});
 
@@ -10,21 +13,24 @@ class DriverSignUpScreen extends StatefulWidget {
 }
 
 class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
+  // GlobalKey used to validate the entire registration form
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
 
+  // Controllers to capture user input data
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _jeepController = TextEditingController();
-  
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // State variables for UI feedback
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
+    // Dispose controllers to prevent memory leaks
     _nameController.dispose();
     _idController.dispose();
     _jeepController.dispose();
@@ -33,19 +39,22 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     super.dispose();
   }
 
+  /// Submits the registration form to the Supabase backend.
+  /// Validates input, constructs the payload, and performs an async network request.
   Future<void> _submitForm() async {
+    // Check if all fields satisfy their validator logic
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
       try {
-        // Automatically make self-registered drivers active so they can log in immediately
+        // Asynchronously insert the robust driver data profile into the database
         await _supabase.from('drivers').insert({
           'driver_name': _nameController.text.trim(),
           'driver_id_code': _idController.text.trim(),
           'jeep_id': _jeepController.text.trim(),
           'username': _usernameController.text.trim(),
           'password': _passwordController.text.trim(),
-          'status': 'Active', 
+          'status': 'Active', // Defaults to active so drivers can immediately access the dashboard
           'rating': 5.0,
         });
 
@@ -56,7 +65,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
               backgroundColor: AppTheme.primaryGreen,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context); // Return to login screen
         }
       } catch (error) {
         if (mounted) {
@@ -76,7 +85,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Matching the dark theme of LoginScreen
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'Driver Registration',
@@ -88,11 +97,9 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
       ),
       body: Stack(
         children: [
-          // Background image
           SizedBox.expand(
             child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
           ),
-          // Dark overlay
           Container(color: Colors.black.withOpacity(0.75)),
 
           SafeArea(
@@ -122,7 +129,6 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                       ),
                       const SizedBox(height: 30),
 
-                      // Personal details
                       _buildTextField(_nameController, "Full Name", Icons.person, "Enter your full name"),
                       const SizedBox(height: 16),
                       _buildTextField(_idController, "NIC / Driver ID", Icons.badge, "Enter your ID (e.g. NIC or License)"),
@@ -130,7 +136,6 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                       _buildTextField(_jeepController, "Jeep License Plate", Icons.directions_car, "Enter vehicle plate"),
                       const SizedBox(height: 30),
 
-                      // Credentials
                       const Text(
                         "Login Credentials",
                         style: TextStyle(
@@ -149,7 +154,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                       SizedBox(
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitForm,
+                          onPressed: _isLoading ? null : _submitForm, // Prevent multiple clicks during network request
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green.shade700,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -170,6 +175,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     );
   }
 
+  /// Helper method to construct standardized form text fields
   Widget _buildTextField(TextEditingController controller, String label, IconData icon, String errorMsg) {
     return TextFormField(
       controller: controller,
@@ -189,6 +195,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     );
   }
 
+  /// Helper method to construct the password field with a toggleable obscure icon
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
@@ -200,7 +207,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
         prefixIcon: const Icon(Icons.lock, color: Colors.white70),
         suffixIcon: IconButton(
           icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.white70),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword), // Toggle password visibility state
         ),
         filled: true,
         fillColor: Colors.white.withOpacity(0.15),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
+import '../../../core/constants/app_theme.dart';
 
 class MessageScreen extends StatefulWidget {
   final String driverId;
-
   const MessageScreen({super.key, required this.driverId});
 
   @override
@@ -12,182 +13,176 @@ class MessageScreen extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   final _client = Supabase.instance.client;
+  final TextEditingController _msgCtrl = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _isSending = false;
 
-  DateTime _parseDate(dynamic value) {
-    if (value == null) return DateTime.fromMillisecondsSinceEpoch(0);
-    return DateTime.tryParse(value.toString()) ??
-        DateTime.fromMillisecondsSinceEpoch(0);
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
   }
 
-  String _formatDate(dynamic value) {
-    final d = _parseDate(value);
-    final mm = d.month.toString().padLeft(2, '0');
-    final dd = d.day.toString().padLeft(2, '0');
-    final hh = d.hour.toString().padLeft(2, '0');
-    final min = d.minute.toString().padLeft(2, '0');
-    return '${d.year}-$mm-$dd $hh:$min';
+  Future<void> _sendMessage() async {
+    final text = _msgCtrl.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isSending = true);
+    try {
+      await _client.from('messages').insert({
+        'recipient_driver_id': 'HQ',
+        'subject': 'Chat',
+        'body': text,
+        'sender_name': 'Driver ID: ${widget.driverId}',
+        'is_read': false,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      _msgCtrl.clear();
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.minScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _markAsRead(String id) async {
     try {
       await _client.from('messages').update({'is_read': true}).eq('id', id);
-    } catch (e) {
-      debugPrint('[Messages] mark read failed: $e');
-    }
-  }
-
-  void _showMessageDetails(Map<String, dynamic> msg) {
-    final subject = msg['subject']?.toString() ?? 'No subject';
-    final sender = msg['sender_name']?.toString() ?? 'Management';
-    final body = msg['body']?.toString() ?? '';
-    final attachmentUrl = msg['attachment_url']?.toString();
-    final createdAt = _formatDate(msg['created_at']);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  subject,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text('From: $sender'),
-                const SizedBox(height: 4),
-                Text('Time: $createdAt'),
-                const SizedBox(height: 16),
-                Text(body),
-                const SizedBox(height: 16),
-
-                if (attachmentUrl != null && attachmentUrl.isNotEmpty) ...[
-                  const Text(
-                    'Attachment',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      attachmentUrl,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Image could not be loaded.',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 8),
-                            SelectableText(
-                              attachmentUrl,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    final id = msg['id']?.toString();
-    if (id != null && msg['is_read'] != true) {
-      _markAsRead(id);
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages'), centerTitle: true),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _client.from('messages').stream(primaryKey: ['id']),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      appBar: AppBar(
+        title: const Text('Chat with HQ', style: TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _client.from('messages').stream(primaryKey: ['id']).order('created_at', ascending: false),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                final msgs = (snapshot.data ?? []).where((m) {
+                  // Show messages where driver is recipient or driver is sender (to HQ)
+                  final isToDriver = m['recipient_driver_id']?.toString() == widget.driverId;
+                  final isFromDriver = m['sender_name']?.toString() == 'Driver ID: ${widget.driverId}';
+                  return isToDriver || isFromDriver;
+                }).toList();
 
-          final allMessages = snapshot.data ?? [];
+                if (msgs.isEmpty) {
+                  return const Center(child: Text("No chat history. Send a message to HQ."));
+                }
 
-          final messages =
-              allMessages
-                  .where(
-                    (m) =>
-                        m['recipient_driver_id']?.toString() == widget.driverId,
-                  )
-                  .toList()
-                ..sort((a, b) {
-                  final da = _parseDate(a['created_at']);
-                  final db = _parseDate(b['created_at']);
-                  return db.compareTo(da);
-                });
+                return ListView.builder(
+                  controller: _scrollCtrl,
+                  reverse: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  itemCount: msgs.length,
+                  itemBuilder: (context, index) {
+                    final m = msgs[index];
+                    final isFromDriver = m['sender_name']?.toString() == 'Driver ID: ${widget.driverId}';
+                    
+                    // Mark Admin messages as read if driver sees them
+                    if (!isFromDriver && m['is_read'] != true && m['id'] != null) {
+                      _markAsRead(m['id'].toString());
+                    }
 
-          if (messages.isEmpty) {
-            return const Center(child: Text('No messages yet'));
-          }
+                    final timeFormat = DateFormat('MMM dd, HH:mm').format(
+                      DateTime.tryParse(m['created_at'].toString())?.toLocal() ?? DateTime.now()
+                    );
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: messages.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final msg = messages[index];
-              final subject = msg['subject']?.toString() ?? 'No subject';
-              final sender = msg['sender_name']?.toString() ?? 'Management';
-              final body = msg['body']?.toString() ?? '';
-              final isRead = msg['is_read'] == true;
-              final time = _formatDate(msg['created_at']);
-
-              return Card(
-                child: ListTile(
-                  leading: Icon(
-                    isRead ? Icons.mark_email_read : Icons.mark_email_unread,
-                    color: isRead ? Colors.grey : Colors.blue,
-                  ),
-                  title: Text(
-                    subject,
-                    style: TextStyle(
-                      fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                    return Align(
+                      alignment: isFromDriver ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                        decoration: BoxDecoration(
+                          color: isFromDriver ? AppTheme.primaryGreen : Colors.grey.shade200,
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(16),
+                            topRight: const Radius.circular(16),
+                            bottomLeft: isFromDriver ? const Radius.circular(16) : Radius.zero,
+                            bottomRight: isFromDriver ? Radius.zero : const Radius.circular(16),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: isFromDriver ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              m['body']?.toString() ?? '',
+                              style: TextStyle(color: isFromDriver ? Colors.white : Colors.black87, fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              timeFormat,
+                              style: TextStyle(color: isFromDriver ? Colors.white70 : Colors.black54, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          
+          // Chat Input Area
+          Container(
+            padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: MediaQuery.of(context).padding.bottom + 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgCtrl,
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     ),
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) => _sendMessage(),
                   ),
-                  subtitle: Text(
-                    '$sender\n$time\n${body.length > 60 ? '${body.substring(0, 60)}...' : body}',
-                  ),
-                  isThreeLine: true,
-                  onTap: () => _showMessageDetails(msg),
                 ),
-              );
-            },
-          );
-        },
+                const SizedBox(width: 12),
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppTheme.primaryGreen,
+                  child: IconButton(
+                    icon: _isSending ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.send_rounded, color: Colors.white),
+                    onPressed: _isSending ? null : _sendMessage,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

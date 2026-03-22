@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -417,7 +418,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     if (_simRunning) return;
     final rnd = Random();
     _simJeeps.clear();
-    final base = _ownLocation ?? LatLng(6.905, 79.861);
+    final base = _ownLocation ?? const LatLng(6.3768, 81.3916);
 
     for (var i = 0; i < count; i++) {
       final id = 'sim_inapp_${i + 1}';
@@ -482,7 +483,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final center = _ownLocation ?? LatLng(6.905, 79.861);
+    final center = _ownLocation ?? const LatLng(6.3768, 81.3916); // Default centers strictly on Yala National Park
 
     return Scaffold(
       appBar: AppBar(title: const Text('Live Map (Driver)')),
@@ -492,12 +493,20 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           center: center,
           zoom: 13.0,
           maxZoom: 18.0,
-          minZoom: 5.0,
+          minZoom: 10.0,
+          // Restrict driver scrolling exclusively to the Yala National Park polygon bounds
+          cameraConstraint: CameraConstraint.contain(
+            bounds: LatLngBounds(
+              const LatLng(6.1500, 81.1000), // South-West Park Boundary
+              const LatLng(6.5500, 81.6000), // North-East Park Boundary
+            ),
+          ),
         ),
         children: [
           TileLayer(
             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             userAgentPackageName: 'com.example.yala_driver_app',
+            tileProvider: CancellableNetworkTileProvider(),
           ),
           MarkerLayer(
             markers: [..._buildJeepMarkers(), ..._buildIncidentMarkers()],
