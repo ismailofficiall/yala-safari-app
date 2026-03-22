@@ -92,56 +92,63 @@ class _MessageScreenState extends State<MessageScreen> {
                   return const Center(child: Text("No chat history. Send a message to HQ."));
                 }
 
-                return ListView.builder(
-                  controller: _scrollCtrl,
-                  reverse: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  itemCount: msgs.length,
-                  itemBuilder: (context, index) {
-                    final m = msgs[index];
-                    final isFromDriver = m['sender_name']?.toString() == 'Driver ID: ${widget.driverId}';
-                    
-                    // Mark Admin messages as read if driver sees them
-                    if (!isFromDriver && m['is_read'] != true && m['id'] != null) {
-                      _markAsRead(m['id'].toString());
-                    }
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    // StreamBuilder will handle the refresh automatically,
+                    // but we can add a small delay to show the indicator.
+                    await Future.delayed(const Duration(seconds: 1));
+                  },
+                  child: ListView.builder(
+                    controller: _scrollCtrl,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    itemCount: msgs.length,
+                    itemBuilder: (context, index) {
+                      final m = msgs[index];
+                      final isFromDriver = m['sender_name']?.toString() == 'Driver ID: ${widget.driverId}';
+                      
+                      // Mark Admin messages as read if driver sees them
+                      if (!isFromDriver && m['is_read'] != true && m['id'] != null) {
+                        _markAsRead(m['id'].toString());
+                      }
 
-                    final timeFormat = DateFormat('MMM dd, HH:mm').format(
-                      DateTime.tryParse(m['created_at'].toString())?.toLocal() ?? DateTime.now()
-                    );
+                      final timeFormat = DateFormat('MMM dd, HH:mm').format(
+                        DateTime.tryParse(m['created_at'].toString())?.toLocal() ?? DateTime.now()
+                      );
 
-                    return Align(
-                      alignment: isFromDriver ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        decoration: BoxDecoration(
-                          color: isFromDriver ? AppTheme.primaryGreen : Colors.grey.shade200,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(16),
-                            topRight: const Radius.circular(16),
-                            bottomLeft: isFromDriver ? const Radius.circular(16) : Radius.zero,
-                            bottomRight: isFromDriver ? Radius.zero : const Radius.circular(16),
+                      return Align(
+                        alignment: isFromDriver ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                          decoration: BoxDecoration(
+                            color: isFromDriver ? AppTheme.primaryGreen : Colors.grey.shade200,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(16),
+                              topRight: const Radius.circular(16),
+                              bottomLeft: isFromDriver ? const Radius.circular(16) : Radius.zero,
+                              bottomRight: isFromDriver ? Radius.zero : const Radius.circular(16),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: isFromDriver ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                m['body']?.toString() ?? '',
+                                style: TextStyle(color: isFromDriver ? Colors.white : Colors.black87, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                timeFormat,
+                                style: TextStyle(color: isFromDriver ? Colors.white70 : Colors.black54, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: isFromDriver ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m['body']?.toString() ?? '',
-                              style: TextStyle(color: isFromDriver ? Colors.white : Colors.black87, fontSize: 16),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              timeFormat,
-                              style: TextStyle(color: isFromDriver ? Colors.white70 : Colors.black54, fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             ),
