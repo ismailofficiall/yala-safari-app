@@ -30,6 +30,12 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
     _fetchInitialLocation();
   }
 
+  @override
+  void dispose() {
+    noteController.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchInitialLocation() async {
     await getLocation();
     if (mounted) setState(() {});
