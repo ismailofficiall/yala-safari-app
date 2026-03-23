@@ -1,4 +1,20 @@
-// lib/features/dashboard/driver_dashboard_screen.dart
+/// =========================================================================
+/// Driver Dashboard Screen
+/// =========================================================================
+/// This is the primary home screen for a driver post-login. 
+/// It acts as the command center, providing active access to:
+/// 1. Real-time fleet location maps
+/// 2. Incident reporting modules
+/// 3. Nearby emergency (SOS) listening engines
+///
+/// Coursework Note - Stateful Architecture:
+/// A `StatefulWidget` is required here because the screen manages an active
+/// `RealtimeChannel` listening for broadcasts from Supabase, as well as an
+/// active background `LocationService` that needs to be initialized during
+/// `initState()` and subsequently destroyed during `dispose()` to prevent
+/// memory leaks.
+/// =========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../map/screens/live_map_screen.dart';

@@ -1,4 +1,19 @@
-// lib/core/services/location_service.dart
+/// =========================================================================
+/// Core Location Service Engine (Hardware & Backend Bridge)
+/// =========================================================================
+/// This service acts as the central coordinator between the local device's
+/// GPS hardware (via Geolocator) and the backend databases.
+///
+/// Coursework Note - Architecture Decision (Firebase RTDB vs Supabase):
+/// In this application, hybrid database architecture is utilized:
+/// 1. Firebase Realtime Database (RTDB) is used exclusively for Live Location
+///    Tracking. RTDB is natively optimized for ultra-fast, high-frequency,
+///    tiny JSON node updates (like GPS coordinates every 5 seconds).
+/// 2. Supabase (PostgreSQL) is used for Relational / Persistent Storage.
+///    It holds Driver profiles, Incident reports, and Audit logs, which 
+///    require complex SQL querying, table joins, and row-level security.
+/// =========================================================================
+
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';

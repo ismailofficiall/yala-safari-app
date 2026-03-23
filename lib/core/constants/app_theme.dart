@@ -1,3 +1,15 @@
+/// =========================================================================
+/// Application Global Theme Configuration
+/// =========================================================================
+/// Defines the centralized visual design language for the application.
+/// 
+/// Coursework Note - Design Systems:
+/// Hardcoding colors (e.g., `Colors.red`) directly inside UI widgets is an 
+/// anti-pattern because modifying the app's brand colors would require changing 
+/// hundreds of files. By centralizing the Color constants and `ThemeData` here, 
+/// changing the brand identity takes only a few seconds globally.
+/// =========================================================================
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
