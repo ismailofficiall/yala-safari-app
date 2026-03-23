@@ -93,6 +93,34 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
         debugPrint('GPS failed for wildlife log: $e');
       }
 
+      // Yala National Park approximate bounds
+      const double minLat = 6.1500;
+      const double maxLat = 6.5500;
+      const double minLng = 81.1000;
+      const double maxLng = 81.6000;
+
+      if (lat != null && lng != null) {
+        final double closestLat = lat.clamp(minLat, maxLat);
+        final double closestLng = lng.clamp(minLng, maxLng);
+
+        final double distanceToPerimeter = Geolocator.distanceBetween(
+          lat, lng, closestLat, closestLng,
+        );
+
+        if (distanceToPerimeter > 5000) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Cannot log wildlife: You are >5km away from Yala."),
+                backgroundColor: Colors.red,
+              ),
+            );
+            setState(() => _loading = false);
+          }
+          return;
+        }
+      }
+
       // Upload media if present
       String? mediaUrl = await _uploadMedia();
 

@@ -185,10 +185,19 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        children: [
+          // Subtle Wildlife Texture Background
+          Opacity(
+            opacity: 0.12,
+            child: SizedBox.expand(
+              child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Stylish "At a glance" card similar to Admin
             Container(
@@ -383,7 +392,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           ],
         ),
       ),
-    );
+    ],),);
   }
 
   /// Builds a large bright red SOS panic button that auto-submits an emergency incident

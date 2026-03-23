@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryGreen = Color(0xFF1B5E20);
-  static const Color primaryGreenLight = Color(0xFF2E7D32);
-  static const Color accentGold = Color(0xFFB8954F);
-  static const Color lightGreen = Color(0xFF66BB6A);
-  static const Color background = Color(0xFFE8EDE6);
-  static const Color surface = Color(0xFFFBFDF9);
-  static const Color darkText = Color(0xFF141814);
-  static const Color greyText = Color(0xFF5F6560);
+  static const Color primaryGreen = Color(0xFFE65100); // Safari Sunset Orange
+  static const Color primaryGreenLight = Color(0xFFFF9800); // Bright Orange
+  static const Color accentGold = Color(0xFFFBC02D); // Cheetah Gold
+  static const Color lightGreen = Color(0xFF4A7C59); // Jungle Canopy
+  static const Color background = Color(0xFF121A14); // Deep Midnight Jungle
+  static const Color surface = Color(0xFF1B261D); // Foliage Shadow
+  static const Color darkText = Color(0xFFE8F2E9); // Crisp Off-White
+  static const Color greyText = Color(0xFF8B9E8F); // Mossy Grey
 
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme.light(
+    final colorScheme = ColorScheme.dark(
       primary: primaryGreen,
       onPrimary: Colors.white,
-      primaryContainer: const Color(0xFFC8E6C9),
-      onPrimaryContainer: const Color(0xFF0D2812),
+      primaryContainer: const Color(0xFF324634),
+      onPrimaryContainer: Colors.white,
       secondary: accentGold,
-      onSecondary: const Color(0xFF1F1C14),
+      onSecondary: const Color(0xFF261D12),
       tertiary: lightGreen,
       surface: surface,
       onSurface: darkText,
