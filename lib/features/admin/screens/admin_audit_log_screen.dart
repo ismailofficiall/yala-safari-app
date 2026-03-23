@@ -117,9 +117,11 @@ class AdminAuditLogScreen extends StatelessWidget {
                 ),
               );
             },
-          ),
-        ],
-      ),
-    );
+          ); // closes ListView.builder
+        }, // closes StreamBuilder's builder function
+      ), // closes StreamBuilder
+      ], // closes Stack children
+      ), // closes Stack
+    ); // closes Scaffold
   }
 }
