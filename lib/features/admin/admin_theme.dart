@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AdminTheme {
-  static const Color primaryGreen = Color(0xFF1F3A2E); // Deep Forest Green
-  static const Color primaryGreenLight = Color(0xFF6E7F4F); // Safari Olive
-  static const Color accentGold = Color(0xFFC78B3B); // Sunset Gold
-  static const Color lightGreen = Color(0xFFB85C38); // Terracotta
-  static const Color background = Color(0xFFF7F3EB); // Warm Ivory
-  static const Color surface = Color(0xFFD9C7A3); // Sand Beige
-  static const Color darkText = Color(0xFF2B2621); // Charcoal Brown
-  static const Color greyText = Color(0xFF5A524A); // Muted Charcoal
+  static const Color primaryGreen = Color(0xFF3A5A40); // Deep Lodge Green
+  static const Color primaryGreenLight = Color(0xFF588157); // Muted Sage
+  static const Color accentGold = Color(0xFFD0A560); // Brushed Brass
+  static const Color lightGreen = Color(0xFF8C5E45); // Teak Leather
+  static const Color background = Color(0xFF0F1110); // Matte Obsidian
+  static const Color surface = Color(0xFF191C1A); // Dim Charcoal Slate
+  static const Color darkText = Color(0xFFEFECE5); // Warm Bone White
+  static const Color greyText = Color(0xFF88918A); // Fog Grey
 
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme.light(
+    final colorScheme = ColorScheme.dark(
       primary: primaryGreen,
       onPrimary: Colors.white,
       primaryContainer: primaryGreenLight,
       onPrimaryContainer: Colors.white,
       secondary: accentGold,
-      onSecondary: Colors.white,
+      onSecondary: const Color(0xFF141210), // Deepest brown for text on gold
       tertiary: lightGreen,
       surface: surface,
       onSurface: darkText,
