@@ -355,14 +355,14 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             const SizedBox(height: 12),
 
             StreamBuilder<List<Map<String, dynamic>>>(
-              stream: Supabase.instance.client.from('messages').stream(primaryKey: ['id']),
+              stream: Supabase.instance.client
+                  .from('messages')
+                  .stream(primaryKey: ['id'])
+                  .eq('recipient_driver_id', widget.driverId)
+                  .eq('is_read', false),
               builder: (context, snapshot) {
                 final allMessages = snapshot.data ?? [];
-                final unreadCount = allMessages.where((m) {
-                  final recipient = m['recipient_driver_id']?.toString();
-                  final isRead = m['is_read'] == true;
-                  return recipient == widget.driverId && !isRead;
-                }).length;
+                final unreadCount = allMessages.length;
 
                 final label = unreadCount > 0 
                     ? "${AppTranslations.t('View Messages')} ($unreadCount pending)"

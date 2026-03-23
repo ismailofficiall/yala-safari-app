@@ -127,6 +127,8 @@ class LocationService {
       if (pos.speed > 11.11) {
         _checkAndReportSpeeding(driverId, pos);
       }
+      
+      _checkZoneProximity(driverId, pos);
 
       await _db!.ref('drivers/$driverId/location').set(payload);
     } catch (e, st) {
@@ -152,6 +154,7 @@ class LocationService {
         "latitude": pos.latitude,
         "longitude": pos.longitude,
         "created_at": DateTime.now().toIso8601String(),
+        "is_resolved": false,
       });
       print('[LocationService] Automatically reported speeding incident!');
     } catch (e) {
@@ -194,6 +197,7 @@ class LocationService {
             'latitude': pos.latitude,
             'longitude': pos.longitude,
             'created_at': DateTime.now().toIso8601String(),
+            'is_resolved': false,
           });
           print('[LocationService] Zone proximity alert triggered for ${zone['name']}');
           break; // Only raise one alert per cycle

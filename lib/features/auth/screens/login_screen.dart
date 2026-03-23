@@ -156,12 +156,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           Container(color: Colors.black.withOpacity(0.6)),
 
           SafeArea(
-            child: Column(
-              children: [
-                // Top bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  child: Row(
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    children: [
+                      // Top bar
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
@@ -375,7 +379,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                 ),
 
-                const Spacer(),
+                      const Spacer(),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
