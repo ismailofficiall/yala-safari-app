@@ -26,8 +26,16 @@ class AdminAuditLogScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        // Stream audit_logs ordered from newest to oldest
+      body: Stack(
+        children: [
+          Opacity(
+            opacity: 0.12,
+            child: SizedBox.expand(
+              child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
+            ),
+          ),
+          StreamBuilder<List<Map<String, dynamic>>>(
+            // Stream audit_logs ordered from newest to oldest
         stream: Supabase.instance.client
             .from('audit_logs')
             .stream(primaryKey: ['id'])
@@ -109,8 +117,8 @@ class AdminAuditLogScreen extends StatelessWidget {
                 ),
               );
             },
-          );
-        },
+          ),
+        ],
       ),
     );
   }

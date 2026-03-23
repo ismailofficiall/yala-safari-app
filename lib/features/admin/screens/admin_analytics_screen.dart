@@ -109,7 +109,15 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
-              child: SingleChildScrollView(
+              child: Stack(
+                children: [
+                  Opacity(
+                    opacity: 0.12,
+                    child: SizedBox.expand(
+                      child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
+                    ),
+                  ),
+                  SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
@@ -180,9 +188,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                         ),
                       );
                     }),
-                  ],
-                ),
               ),
+              ],
+            ),
             ),
     );
   }
