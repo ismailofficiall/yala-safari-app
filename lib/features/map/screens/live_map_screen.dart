@@ -14,10 +14,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class LiveMapScreen extends StatefulWidget {
   final String driverId;
   final String databaseUrl;
+  final LatLng? focusLocation;
 
   const LiveMapScreen({
     super.key,
     required this.driverId,
+    this.focusLocation,
     this.databaseUrl =
         "https://yala-driver-app1-default-rtdb.asia-southeast1.firebasedatabase.app/",
   });
@@ -361,9 +363,14 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   // ---------------- Map helpers ----------------
   void _centerMapOnce() {
-    if (_ownLocation != null && !_hasCenteredOnce) {
-      _mapController.move(_ownLocation!, 15.0);
-      _hasCenteredOnce = true;
+    if (!_hasCenteredOnce) {
+      if (widget.focusLocation != null) {
+        _mapController.move(widget.focusLocation!, 15.0);
+        _hasCenteredOnce = true;
+      } else if (_ownLocation != null) {
+        _mapController.move(_ownLocation!, 15.0);
+        _hasCenteredOnce = true;
+      }
     }
   }
 
@@ -483,7 +490,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final center = _ownLocation ?? const LatLng(6.3768, 81.3916); // Default centers strictly on Yala National Park
+    // Center logic prioritizes focusLocation (like an incident), then ownLocation, then park default
+    final center = widget.focusLocation ?? _ownLocation ?? const LatLng(6.3768, 81.3916);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Live Map (Driver)')),

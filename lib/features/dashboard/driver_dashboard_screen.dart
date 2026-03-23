@@ -4,9 +4,11 @@ import 'package:geolocator/geolocator.dart';
 import '../map/screens/live_map_screen.dart';
 import '../../core/services/location_service.dart';
 import '../incidents/screens/incident_report_screen.dart';
+import '../incidents/screens/incident_feed_screen.dart';
 import '../../core/translations/app_translations.dart';
 import '../messages/screens/message_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_theme.dart';
 import '../auth/screens/login_screen.dart';
 import '../profile/screens/driver_profile_screen.dart';
@@ -33,12 +35,83 @@ class DriverDashboardScreen extends StatefulWidget {
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   late final LocationService _locationService;
+  RealtimeChannel? _incidentChannel;
 
   @override
   void initState() {
     super.initState();
     _locationService = LocationService();
     _location_service_start();
+    _listenForSos();
+  }
+
+  void _listenForSos() {
+    _incidentChannel = Supabase.instance.client.channel('public:incidents_driver').onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'incidents',
+      callback: (payload) async {
+        final newRecord = payload.newRecord;
+        if (newRecord['type'] == 'Emergency' || newRecord['title']?.contains('SOS') == true) {
+          if (newRecord['title']?.contains(widget.driverId) == true) return;
+
+          final lat = newRecord['latitude'] as num?;
+          final lng = newRecord['longitude'] as num?;
+          if (lat != null && lng != null) {
+            double? myLat, myLng;
+            try {
+              final pos = await Geolocator.getCurrentPosition();
+              myLat = pos.latitude;
+              myLng = pos.longitude;
+            } catch (_) {}
+
+            if (myLat != null && myLng != null) {
+              final distance = Geolocator.distanceBetween(myLat, myLng, lat.toDouble(), lng.toDouble());
+              if (distance <= 5000) { // 5km radius alert
+                _showDriverSosAlert(newRecord);
+              }
+            }
+          }
+        }
+      },
+    )..subscribe();
+  }
+
+  void _showDriverSosAlert(Map<String, dynamic> record) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.red[800],
+        title: Row(
+          children: const [
+            Icon(Icons.sos, color: Colors.white, size: 30),
+            SizedBox(width: 8),
+            Text("NEARBY SOS ALERT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          "A fellow driver nearby has triggered an SOS Emergency!\n\n${record['title']}\nDistance: < 5km",
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.push(context, MaterialPageRoute(builder: (_) => LiveMapScreen(
+                driverId: widget.driverId,
+                focusLocation: LatLng((record['latitude'] as num).toDouble(), (record['longitude'] as num).toDouble()),
+              )));
+            },
+            child: const Text("VIEW ON MAP", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text("DISMISS", style: TextStyle(color: Colors.white70)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _location_service_start() {
@@ -53,6 +126,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   @override
   void dispose() {
     _locationService.stopTracking();
+    _incidentChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -224,6 +298,33 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ),
             const SizedBox(height: 12),
 
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: Supabase.instance.client
+                  .from('incidents')
+                  .stream(primaryKey: ['id'])
+                  .eq('is_resolved', false),
+              builder: (context, snapshot) {
+                final allIncidents = snapshot.data ?? [];
+                final activeCount = allIncidents.length;
+
+                final label = activeCount > 0 
+                    ? "Park Incidents Feed ($activeCount active)"
+                    : "Park Incidents Feed";
+
+                return _buildActionItem(
+                  context: context,
+                  label: label,
+                  icon: Icons.notification_important_rounded,
+                  color: activeCount > 0 ? const Color(0xFFD32F2F) : AppTheme.darkText,
+                  badgeCount: activeCount,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => IncidentFeedScreen(driverId: widget.driverId)));
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+
             _buildActionItem(
               context: context,
               label: 'Log Wildlife Encounter',
@@ -299,14 +400,46 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           lng = pos.longitude;
         } catch (_) {}
 
+        if (lat == null || lng == null || (lat == 0.0 && lng == 0.0)) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot verify your location for SOS.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+          }
+          return;
+        }
+
+        const double minLat = 6.1500;
+        const double maxLat = 6.5500;
+        const double minLng = 81.1000;
+        const double maxLng = 81.6000;
+
+        final double closestLat = lat.clamp(minLat, maxLat);
+        final double closestLng = lng.clamp(minLng, maxLng);
+
+        final double distanceToPerimeter = Geolocator.distanceBetween(
+          lat, lng, closestLat, closestLng,
+        );
+
+        if (distanceToPerimeter > 5000) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Cannot report SOS: You are >5km away from Yala."),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
         try {
           await Supabase.instance.client.from('incidents').insert({
             'title': 'SOS EMERGENCY — Driver ${widget.driverId}',
             'type': 'Emergency',
             'note': 'PANIC BUTTON ACTIVATED. Immediate assistance required.',
-            'latitude': lat ?? 0.0,
-            'longitude': lng ?? 0.0,
+            'latitude': lat,
+            'longitude': lng,
             'created_at': DateTime.now().toIso8601String(),
+            'is_resolved': false,
           });
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

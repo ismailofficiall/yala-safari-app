@@ -7,6 +7,10 @@ import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
+import 'package:latlong2/latlong.dart';
+
 import '../../../core/services/supabase_client.dart';
 import '../../../core/services/offline_sync_service.dart';
 
@@ -21,6 +25,19 @@ class IncidentReportScreen extends StatefulWidget {
 }
 
 class _IncidentReportScreenState extends State<IncidentReportScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _fetchInitialLocation();
+  }
+
+  Future<void> _fetchInitialLocation() async {
+    await getLocation();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   String? incidentType;
   final TextEditingController noteController = TextEditingController();
 
@@ -128,6 +145,46 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
     try {
       await getLocation();
 
+      if (latitude == null || longitude == null || (latitude == 0.0 && longitude == 0.0)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cannot verify your location. GPS signal is required.")),
+          );
+          setState(() => loading = false);
+        }
+        return;
+      }
+
+      // Yala National Park approximate bounds
+      const double minLat = 6.1500;
+      const double maxLat = 6.5500;
+      const double minLng = 81.1000;
+      const double maxLng = 81.6000;
+
+      final double closestLat = latitude!.clamp(minLat, maxLat);
+      final double closestLng = longitude!.clamp(minLng, maxLng);
+
+      final double distanceToPerimeter = Geolocator.distanceBetween(
+        latitude!,
+        longitude!,
+        closestLat,
+        closestLng,
+      );
+
+      // 5km = 5000 meters
+      if (distanceToPerimeter > 5000) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Cannot report incident: You are more than 5km away from Yala National Park."),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => loading = false);
+        }
+        return;
+      }
+
       String? imageUrl;
       if (pickedFile != null) {
         imageUrl = await uploadImage();
@@ -145,6 +202,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         "latitude": latitude ?? 0.0,
         "longitude": longitude ?? 0.0,
         "created_at": DateTime.now().toIso8601String(),
+        "is_resolved": false,
       };
 
       // Perform synchronous insert across the API network
@@ -169,6 +227,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
           "latitude": latitude ?? 0.0,
           "longitude": longitude ?? 0.0,
           "created_at": DateTime.now().toIso8601String(),
+          "is_resolved": false,
         };
 
         await OfflineSyncService.saveOfflineIncident(payload);
@@ -225,6 +284,71 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+
+                if (latitude != null && longitude != null)
+                  Container(
+                    height: 180,
+                    margin: const EdgeInsets.only(top: 20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Stack(
+                      children: [
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: LatLng(latitude!, longitude!),
+                            initialZoom: 15.0,
+                            interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                              userAgentPackageName: 'com.example.yala_driver_app',
+                              tileProvider: CancellableNetworkTileProvider(),
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(latitude!, longitude!),
+                                  width: 40,
+                                  height: 40,
+                                  child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          left: 20,
+                          right: 20,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.95), 
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                            ),
+                            child: const Text(
+                              "This explicit location will be pinned and shared on the Live Map",
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  const Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Center(
+                      child: Text("Acquiring GPS location to pin...", style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+
                 const SizedBox(height: 20),
 
                 // Cross-platform rendering hook to render the XFile blob URL gracefully across Chrome
