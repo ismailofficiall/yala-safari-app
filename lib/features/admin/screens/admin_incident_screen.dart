@@ -141,6 +141,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> with SingleTi
             Tab(icon: Icon(Icons.check_circle_outline), text: "Resolved"),
           ],
         ),
+      ),
       body: Stack(
         children: [
           Opacity(
