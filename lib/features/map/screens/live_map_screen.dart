@@ -55,6 +55,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   Timer? _simTimer;
   final List<Map<String, dynamic>> _simJeeps = [];
   bool _simRunning = false;
+  
+  bool _isMapReady = false;
 
   @override
   void initState() {
@@ -363,7 +365,9 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   // ---------------- Map helpers ----------------
   void _centerMapOnce() {
-    if (!_hasCenteredOnce) {
+    if (!_isMapReady || _hasCenteredOnce) return;
+    
+    try {
       if (widget.focusLocation != null) {
         _mapController.move(widget.focusLocation!, 15.0);
         _hasCenteredOnce = true;
@@ -371,7 +375,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         _mapController.move(_ownLocation!, 15.0);
         _hasCenteredOnce = true;
       }
-    }
+    } catch (_) {}
   }
 
   Future<void> _recenterToOwnLocation() async {
@@ -502,13 +506,13 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           zoom: 13.0,
           maxZoom: 18.0,
           minZoom: 10.0,
-          // Restrict driver scrolling exclusively to the Yala National Park polygon bounds
-          cameraConstraint: CameraConstraint.contain(
-            bounds: LatLngBounds(
-              const LatLng(6.1500, 81.1000), // South-West Park Boundary
-              const LatLng(6.5500, 81.6000), // North-East Park Boundary
-            ),
-          ),
+          onMapReady: () {
+            _isMapReady = true;
+            _centerMapOnce();
+            if (_ownLocation == null) {
+              _recenterToOwnLocation();
+            }
+          },
         ),
         children: [
           TileLayer(
@@ -535,43 +539,68 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            heroTag: "recenter",
-            onPressed: _recenterToOwnLocation,
-            child: const Icon(Icons.my_location),
+          _StyledMapButton(
+            icon: Icons.my_location_rounded,
+            onTap: _recenterToOwnLocation,
+            color: const Color(0xFF1B5E20), // Primary Green
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: "zoom_in",
-            onPressed: () {
-              _mapController.move(
-                _mapController.center,
-                _mapController.zoom + 1,
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: "zoom_out",
-            onPressed: () {
-              _mapController.move(
-                _mapController.center,
-                _mapController.zoom - 1,
-              );
-            },
-            child: const Icon(Icons.remove),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: "sim",
-            onPressed: _simRunning
-                ? _stopInAppSimulation
-                : _startInAppSimulation,
-            child: Icon(_simRunning ? Icons.stop : Icons.play_arrow),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+            ),
+            child: Column(
+              children: [
+                _StyledMapButton(
+                  icon: Icons.add_rounded,
+                  transparent: true,
+                  onTap: () => _mapController.move(_mapController.center, _mapController.zoom + 1),
+                  color: Colors.black87,
+                ),
+                Container(height: 1, width: 30, color: Colors.black12),
+                _StyledMapButton(
+                  icon: Icons.remove_rounded,
+                  transparent: true,
+                  onTap: () => _mapController.move(_mapController.center, _mapController.zoom - 1),
+                  color: Colors.black87,
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StyledMapButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+  final bool transparent;
+
+  const _StyledMapButton({required this.icon, required this.onTap, required this.color, this.transparent = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: transparent ? Colors.transparent : Colors.white,
+      shape: transparent ? null : const CircleBorder(),
+      borderRadius: transparent ? BorderRadius.circular(20) : null,
+      elevation: transparent ? 0 : 4,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: transparent ? null : const CircleBorder(),
+        borderRadius: transparent ? BorderRadius.circular(20) : null,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Icon(icon, color: color, size: 26),
+        ),
       ),
     );
   }
@@ -606,15 +635,15 @@ class _OwnMarkerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blueAccent,
+        color: const Color(0xFF1B5E20), // AppTheme.primaryGreen
         shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
         boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+          BoxShadow(color: const Color(0xFF1B5E20).withOpacity(0.5), blurRadius: 16, offset: const Offset(0, 4)),
         ],
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Icon(Icons.directions_bus, color: Colors.white, size: 28),
+      child: const Center(
+        child: Icon(Icons.directions_car_filled_rounded, color: Colors.white, size: 28),
       ),
     );
   }
@@ -630,20 +659,54 @@ class _OtherJeepMarker extends StatelessWidget {
       onTap: () {
         showModalBottomSheet(
           context: context,
+          backgroundColor: Colors.transparent,
           builder: (_) => Container(
-            padding: const EdgeInsets.all(12),
-            child: Text("Jeep: $driverId"),
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB8954F).withOpacity(0.15), // AppTheme.accentGold
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.directions_car_filled_rounded, color: Color(0xFFB8954F), size: 36),
+                ),
+                const SizedBox(height: 16),
+                const Text("Safari Driver", style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text("ID: $driverId", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.check),
+                    label: const Text("Acknowledge"),
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1B5E20), padding: const EdgeInsets.symmetric(vertical: 14)),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.orangeAccent,
+          color: const Color(0xFFB8954F), // accentGold
           shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)],
         ),
-        child: const Padding(
-          padding: EdgeInsets.all(6.0),
-          child: Icon(Icons.directions_car, color: Colors.white, size: 16),
+        child: const Center(
+          child: Icon(Icons.person_pin, color: Colors.white, size: 18),
         ),
       ),
     );

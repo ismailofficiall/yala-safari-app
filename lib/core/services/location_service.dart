@@ -179,7 +179,7 @@ class LocationService {
     }
 
     try {
-      final zones = await Supabase.instance.client.from('restricted_zones').select();
+      final zones = await Supabase.instance.client.from('park_zones').select();
       for (final zone in zones) {
         final double? zoneLat = (zone['center_lat'] as num?)?.toDouble();
         final double? zoneLng = (zone['center_lng'] as num?)?.toDouble();

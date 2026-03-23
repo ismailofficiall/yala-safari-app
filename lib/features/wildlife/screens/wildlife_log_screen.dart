@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../core/services/supabase_client.dart';
 
 /// Screen allowing drivers to log wildlife encounters separately from incidents.
 /// Records the animal species, count, behaviour, GPS stub, and timestamp in Supabase.
@@ -20,6 +26,10 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
   String _selectedBehaviour = 'Grazing';
   bool _loading = false;
 
+  XFile? _pickedMedia;
+  bool _isVideo = false;
+  final ImagePicker _picker = ImagePicker();
+
   /// Categorical list of animals commonly spotted inside Yala
   final List<String> _animals = [
     'Leopard', 'Elephant', 'Sloth Bear', 'Crocodile', 'Water Buffalo',
@@ -30,6 +40,38 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
   final List<String> _behaviours = [
     'Grazing', 'Hunting', 'Moving', 'Resting', 'Aggressive', 'With Cubs/Young',
   ];
+
+  Future<void> _pickMedia({required bool isVideo, required ImageSource source}) async {
+    final picked = isVideo 
+        ? await _picker.pickVideo(source: source)
+        : await _picker.pickImage(source: source);
+    if (picked != null) {
+      setState(() {
+        _pickedMedia = picked;
+        _isVideo = isVideo;
+      });
+    }
+  }
+
+  Future<String?> _uploadMedia() async {
+    if (_pickedMedia == null) return null;
+    try {
+      final fileName = const Uuid().v4();
+      String ext = path.extension(_pickedMedia!.name);
+      if (ext.isEmpty) ext = _isVideo ? '.mp4' : '.jpg';
+      final filePath = "wildlife/$fileName$ext";
+      final bytes = await _pickedMedia!.readAsBytes();
+
+      await SupabaseConfig.client.storage
+          .from("incident-images")
+          .uploadBinary(filePath, bytes, fileOptions: const FileOptions(upsert: true));
+
+      return SupabaseConfig.client.storage.from("incident-images").getPublicUrl(filePath);
+    } catch (e) {
+      debugPrint("Media upload failed: $e");
+      return null;
+    }
+  }
 
   /// Submits the wildlife sighting record to the `wildlife_logs` table in Supabase
   Future<void> _submitLog() async {
@@ -51,6 +93,9 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
         debugPrint('GPS failed for wildlife log: $e');
       }
 
+      // Upload media if present
+      String? mediaUrl = await _uploadMedia();
+
       // Insert new row into the wildlife_logs Postgres table
       await Supabase.instance.client.from('wildlife_logs').insert({
         'driver_id': widget.driverId,
@@ -60,6 +105,7 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
         'notes': _notesCtrl.text.trim(),
         'latitude': lat,
         'longitude': lng,
+        'image_url': mediaUrl, // Dynamic column handling
         'logged_at': DateTime.now().toIso8601String(),
       });
 
@@ -148,6 +194,54 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
                   checkmarkColor: AppTheme.primaryGreen,
                 );
               }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            const Text("Upload Evidence (Photo/Video)", style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            if (_pickedMedia != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                height: 140,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade200,
+                  image: _isVideo ? null : DecorationImage(
+                    fit: BoxFit.cover,
+                    image: kIsWeb ? NetworkImage(_pickedMedia!.path) : FileImage(File(_pickedMedia!.path)) as ImageProvider,
+                  ),
+                ),
+                child: _isVideo 
+                    ? const Center(child: Icon(Icons.videocam, size: 48, color: Colors.grey))
+                    : null,
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickMedia(isVideo: false, source: ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt, size: 18),
+                    label: const Text("Photo"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickMedia(isVideo: true, source: ImageSource.camera),
+                    icon: const Icon(Icons.videocam, size: 18),
+                    label: const Text("Video"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickMedia(isVideo: false, source: ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library, size: 18),
+                    label: const Text("Gallery"),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
