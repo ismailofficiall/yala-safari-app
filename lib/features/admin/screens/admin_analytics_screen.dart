@@ -187,12 +187,14 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           ),
                         ),
                       );
-                    }),
-              ),
-              ],
-            ),
-            ),
-    );
+                    }).toList(), // also fix the missing toList() since it's a spread
+                  ], // Close Column's children
+                ), // Close Column
+              ), // Close SingleChildScrollView
+            ], // Close Stack's children
+          ), // Close Stack
+        ), // Close RefreshIndicator
+    ); // Close Scaffold
   }
 
   /// Builds the 7-day incident frequency bar chart using fl_chart BarChartData
