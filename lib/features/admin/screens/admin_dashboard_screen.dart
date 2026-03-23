@@ -41,11 +41,19 @@ class AdminDashboardScreen extends StatelessWidget {
         extendedPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Stack(
+        children: [
+          Opacity(
+            opacity: 0.12,
+            child: SizedBox.expand(
+              child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
@@ -227,6 +235,7 @@ class AdminDashboardScreen extends StatelessWidget {
           ],
         ),
       ),
+      ],),
     );
   }
 

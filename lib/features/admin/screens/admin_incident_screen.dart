@@ -141,12 +141,21 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> with SingleTi
             Tab(icon: Icon(Icons.check_circle_outline), text: "Resolved"),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Stack(
         children: [
-          _buildList(isResolved: false),
-          _buildList(isResolved: true),
+          Opacity(
+            opacity: 0.12,
+            child: SizedBox.expand(
+              child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
+            ),
+          ),
+          TabBarView(
+            controller: _tabController,
+            children: [
+              _buildList(isResolved: false),
+              _buildList(isResolved: true),
+            ],
+          ),
         ],
       ),
     );
