@@ -52,7 +52,11 @@ class OfflineSyncService {
         debugPrint("Successfully synced offline incident.");
       } catch (e) {
         // If transmission fails (still no internet), push it back onto the fail buffer
-        debugPrint("Failed to sync offline incident, keeping in queue: $e");
+        if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+          debugPrint("[OfflineSync] Network unavailable. Retrying in next cycle.");
+        } else {
+          debugPrint("[OfflineSync] Payload rejection or DB error: $e");
+        }
         failed.add(item);
       }
     }
