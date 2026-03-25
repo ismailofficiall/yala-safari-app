@@ -20,18 +20,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   /// Represents each onboarding slide's content
   final List<_OnboardingData> _pages = [
+    // Step 1: Initial introduction to the Yala Driver platform
     _OnboardingData(
       icon: Icons.forest_rounded,
       color: AppTheme.primaryGreen,
       title: "Welcome to Yala Driver",
       subtitle: "Your intelligent companion for safe and efficient safari operations inside Yala National Park.",
     ),
+    // Step 2: Highlighting the offline-first reporting feature
     _OnboardingData(
       icon: Icons.warning_amber_rounded,
       color: Colors.deepOrange,
       title: "Report Incidents Instantly",
       subtitle: "Capture wildlife sightings, emergencies, or breakdowns with photos and GPS coordinates — even offline.",
     ),
+    // Step 3: Explaining the HQ connection and safety features
     _OnboardingData(
       icon: Icons.gps_fixed_rounded,
       color: Colors.blue,
