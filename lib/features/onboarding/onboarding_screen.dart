@@ -17,6 +17,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// Page controller to animate transitions between onboarding slides
   final PageController _controller = PageController();
   int _currentPage = 0;
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   /// Represents each onboarding slide's content
   final List<_OnboardingData> _pages = [
