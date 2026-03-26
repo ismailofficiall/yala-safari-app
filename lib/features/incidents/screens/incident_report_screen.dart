@@ -262,6 +262,26 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final payload = {
+                  "title": "${incidentType ?? 'Draft'} - ${DateTime.now().toIso8601String()}",
+                  "type": incidentType ?? 'Other',
+                  "note": "${noteController.text}\n[DRAFT MANUALLY SAVED]",
+                  "latitude": latitude ?? 0.0,
+                  "longitude": longitude ?? 0.0,
+                  "created_at": DateTime.now().toIso8601String(),
+                  "is_resolved": false,
+                };
+                await OfflineSyncService.saveOfflineIncident(payload);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Draft saved locally")));
+                }
+              },
+              icon: const Icon(Icons.drive_file_rename_outline),
+              label: const Text("Save to Draft"),
+            ),
             const SizedBox(height: 32),
             SizedBox(
               height: 56,
