@@ -90,6 +90,12 @@ class _IncidentFeedScreenState extends State<IncidentFeedScreen> {
       case "vehicle breakdown":
       case "breakdown":
         return Icons.car_repair;
+      case "elephant":
+        return Icons.eco;
+      case "leopard":
+        return Icons.visibility;
+      case "crocodile":
+        return Icons.water;
       default:
         return Icons.report_problem;
     }
