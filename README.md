@@ -6,6 +6,7 @@ This platform acts as an intelligent, real-time tracking and incident management
 
 ## 🌟 Key Features
 * **Offline-First Synchronization (NVRAM Queueing)**: Drivers can log wildlife sightings using `SharedPreferences`. Once a cellular connection is re-established, the payload is automatically pushed to the cloud.
+* **Offline Map Caching (YALA-12)**: Caches high-resolution topographic map tiles for reliable navigation in areas with zero connectivity.
 * **Proximity Zone Alerts (Geofencing)**: Automatically calculates Euclidean distances matching live GPS coordinates against known Supabase polygon boundaries; triggers an alert when a driver approaches a restricted zone (<50m).
 * **Automated Speed Audits**: `LocationService` listens to periodic native OS location sensors. If the raw kinetic speed exceeds ~40km/h, an indisputable "Speeding Incident" is autonomously logged into the HQ audit table.
 * **Emergency Dispatch**: A highly visible, long-press SOS panic button instantly dumps exact GPS coordinates to an Admin dispatcher's dashboard with real-time WebSocket listening.
