@@ -35,6 +35,12 @@ graph TD
         H --> |Print/Save| I(PDF Generator)
     end
 ```
++
++## 📚 API Documentation (Supabase)
++All backend interactions are routed through the Supabase Flutter SDK.
++* **Table `incidents`**: Stores hardware-triggered alerts and manual driver logs.
++* **Table `park_zones`**: Contains GeoJSON-compatible restricted area boundaries.
++* **Table `wildlife_logs`**: Primary sink for field sightings with media attachments.
 
 ## 🧪 Testing Methodology
 A robust separation of concerns allowed the business logic to be mathematically verified.
