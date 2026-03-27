@@ -122,7 +122,8 @@ class LocationService {
 
       final Position pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
-        timeLimit: const Duration(seconds: 10),
+        // Increased timeout to 15 seconds to handle high-latency GPS satellite locks in dense jungle canopy [YALA-18]
+        timeLimit: const Duration(seconds: 15),
       );
 
       final payload = {
