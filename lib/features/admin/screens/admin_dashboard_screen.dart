@@ -16,16 +16,19 @@ class AdminDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Dashboard', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-            Text(
-              'Live overview',
-              style: theme.textTheme.labelMedium?.copyWith(color: AdminTheme.greyText, fontWeight: FontWeight.w500),
-            ),
-          ],
+        title: Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Dashboard', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              Text(
+                'Live overview',
+                style: theme.textTheme.labelMedium?.copyWith(color: AdminTheme.greyText, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
         automaticallyImplyLeading: false,
         actions: const [AdminAppBarActions()],
