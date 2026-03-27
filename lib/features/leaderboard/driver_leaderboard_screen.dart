@@ -49,17 +49,17 @@ class DriverLeaderboardScreen extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: index == 0
-                        ? AppTheme.accentGold.withOpacity(0.08)  // Gold tint for #1
+                        ? AppTheme.accentGold.withValues(alpha: 0.08)  // Gold tint for #1
                         : AppTheme.surface,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: index == 0
-                          ? AppTheme.accentGold.withOpacity(0.4)
-                          : Colors.black.withOpacity(0.05),
+                          ? AppTheme.accentGold.withValues(alpha: 0.4)
+                          : Colors.black.withValues(alpha: 0.05),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

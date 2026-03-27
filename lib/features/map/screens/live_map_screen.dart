@@ -1,6 +1,5 @@
 // lib/features/map/screens/live_map_screen.dart
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
@@ -51,11 +50,6 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   String? _currentZoneId;
   bool _hasCenteredOnce = false;
 
-  // ---------------- Simulation ----------------
-  Timer? _simTimer;
-  final List<Map<String, dynamic>> _simJeeps = [];
-  bool _simRunning = false;
-  
   bool _isMapReady = false;
 
   @override
@@ -77,7 +71,6 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     _driversRemovedSub?.cancel();
     _ownLocationSub?.cancel();
     _incidentSub?.cancel();
-    _simTimer?.cancel();
     super.dispose();
   }
 
@@ -355,7 +348,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
               Image.network(
                 i.imageUrl!,
                 width: double.infinity,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (_, error, stackTrace) => const SizedBox.shrink(),
               ),
           ],
         ),
@@ -420,77 +413,6 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     return markers;
   }
 
-  // ---------------- In-app Simulator ----------------
-  void _startInAppSimulation({
-    int count = 6,
-    int intervalMs = 3000,
-    double spread = 0.01,
-  }) {
-    if (_simRunning) return;
-    final rnd = Random();
-    _simJeeps.clear();
-    final base = _ownLocation ?? const LatLng(6.3768, 81.3916);
-
-    for (var i = 0; i < count; i++) {
-      final id = 'sim_inapp_${i + 1}';
-      final lat = base.latitude + (rnd.nextDouble() - 0.5) * spread;
-      final lng = base.longitude + (rnd.nextDouble() - 0.5) * spread;
-      _simJeeps.add({
-        'id': id,
-        'lat': lat,
-        'lng': lng,
-        'angle': rnd.nextDouble() * 360,
-      });
-    }
-
-    _simTimer = Timer.periodic(Duration(milliseconds: intervalMs), (t) async {
-      final now = DateTime.now().toIso8601String();
-      for (var s in _simJeeps) {
-        final jitterLat = (rnd.nextDouble() - 0.5) * 0.0003;
-        final jitterLng = (rnd.nextDouble() - 0.5) * 0.0003;
-        s['lat'] = (s['lat'] as double) + jitterLat;
-        s['lng'] = (s['lng'] as double) + jitterLng;
-
-        final payload = {
-          'lat': s['lat'],
-          'lng': s['lng'],
-          'accuracy': 5 + rnd.nextDouble() * 10,
-          'speed': rnd.nextDouble() * 4,
-          'timestamp': now,
-        };
-
-        try {
-          await _db.ref('drivers/${s['id']}/location').set(payload);
-          await _db.ref('drivers/${s['id']}/meta').set({
-            'jeep_id': s['id'],
-            'display_name': 'Sim ${s['id']}',
-          });
-        } catch (e) {
-          debugPrint('[Sim] write error for ${s['id']}: $e');
-        }
-      }
-    });
-
-    setState(() => _simRunning = true);
-  }
-
-  Future<void> _stopInAppSimulation({bool cleanupNodes = true}) async {
-    _simTimer?.cancel();
-    _simTimer = null;
-    setState(() => _simRunning = false);
-
-    if (cleanupNodes) {
-      for (var s in _simJeeps) {
-        try {
-          await _db.ref('drivers/${s['id']}').remove();
-        } catch (e) {
-          debugPrint('[Sim] cleanup error for ${s['id']}: $e');
-        }
-      }
-    }
-
-    _simJeeps.clear();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -502,8 +424,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          center: center,
-          zoom: 13.0,
+          initialCenter: center,
+          initialZoom: 13.0,
           maxZoom: 18.0,
           minZoom: 10.0,
           onMapReady: () {
@@ -529,8 +451,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                 points: z.polygon,
                 borderStrokeWidth: 2,
                 color: z.active
-                    ? Colors.red.withOpacity(0.18)
-                    : Colors.grey.withOpacity(0.10),
+                    ? Colors.red.withValues(alpha: 0.18)
+                    : Colors.grey.withValues(alpha: 0.10),
                 borderColor: z.active ? Colors.red : Colors.grey,
               );
             }).toList(),
@@ -558,14 +480,14 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                 _StyledMapButton(
                   icon: Icons.add_rounded,
                   transparent: true,
-                  onTap: () => _mapController.move(_mapController.center, _mapController.zoom + 1),
+                  onTap: () => _mapController.move(_mapController.camera.center, _mapController.camera.zoom + 1),
                   color: Colors.black87,
                 ),
                 Container(height: 1, width: 30, color: Colors.black12),
                 _StyledMapButton(
                   icon: Icons.remove_rounded,
                   transparent: true,
-                  onTap: () => _mapController.move(_mapController.center, _mapController.zoom - 1),
+                  onTap: () => _mapController.move(_mapController.camera.center, _mapController.camera.zoom - 1),
                   color: Colors.black87,
                 ),
               ],
@@ -639,7 +561,7 @@ class _OwnMarkerWidget extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF1B5E20).withOpacity(0.5), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(color: const Color(0xFF1B5E20).withValues(alpha: 0.5), blurRadius: 16, offset: const Offset(0, 4)),
         ],
       ),
       child: const Center(
@@ -674,7 +596,7 @@ class _OtherJeepMarker extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFB8954F).withOpacity(0.15), // AppTheme.accentGold
+                    color: const Color(0xFFB8954F).withValues(alpha: 0.15), // AppTheme.accentGold
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.directions_car_filled_rounded, color: Color(0xFFB8954F), size: 36),

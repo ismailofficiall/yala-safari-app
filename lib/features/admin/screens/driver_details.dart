@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin_theme.dart';
 import 'admin_chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DriverDetails extends StatelessWidget {
   final Map<String, dynamic> driver;
@@ -62,20 +63,21 @@ class DriverDetails extends StatelessWidget {
                       backgroundColor: isLowRating
                           ? Colors.red.withValues(alpha: 0.12)
                           : AdminTheme.lightGreen.withValues(alpha: 0.22),
-                      child: Text(
+                      backgroundImage: d['image_url'] != null ? NetworkImage(d['image_url']) : null,
+                      child: d['image_url'] == null ? Text(
                         ratingLabel,
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
                           color: isLowRating ? const Color(0xFFC62828) : AdminTheme.primaryGreen,
                         ),
-                      ),
+                      ) : null,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Rating',
+                  d['image_url'] != null ? 'Rating: $ratingLabel' : 'Rating',
                   style: theme.textTheme.labelMedium?.copyWith(color: AdminTheme.greyText, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
@@ -83,6 +85,13 @@ class DriverDetails extends StatelessWidget {
                   'ID ${d['driver_id_code']}',
                   style: theme.textTheme.titleMedium?.copyWith(color: AdminTheme.greyText, fontWeight: FontWeight.w600),
                 ),
+                if (d['phone_number'] != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Phone: ${d['phone_number']}',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: AdminTheme.primaryGreen, fontWeight: FontWeight.w700),
+                  ),
+                ],
                 const SizedBox(height: 28),
                 Row(
                   children: [
@@ -92,17 +101,41 @@ class DriverDetails extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 28),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonalIcon(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminChatScreen(driverId: d['id'].toString()))),
-                    icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    label: const Text('Message Driver'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminChatScreen(driverId: d['id'].toString()))),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded),
+                        label: const Text('Message'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
                     ),
-                  ),
+                    if (d['phone_number'] != null) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: () async {
+                            final url = Uri.parse('tel:${d['phone_number']}');
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                          },
+                          icon: const Icon(Icons.phone_enabled_rounded),
+                          label: const Text('Call'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AdminTheme.primaryGreen.withValues(alpha: 0.1),
+                            foregroundColor: AdminTheme.primaryGreen,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 12),
                 SizedBox(

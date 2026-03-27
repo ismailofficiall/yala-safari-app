@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_theme.dart';
 
 /// Screen responsible for handling new driver self-registration.
@@ -23,10 +27,15 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
   final TextEditingController _jeepController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
 
   // State variables for UI feedback
   bool _isLoading = false;
   bool _obscurePassword = true;
+  XFile? _profileImage;
+  bool _isVerified = false;
+  bool _otpSent = false;
 
   @override
   void dispose() {
@@ -36,27 +45,129 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     _jeepController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
+    _otpController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+    if (picked != null) {
+      setState(() => _profileImage = picked);
+    }
+  }
+
+  Future<void> _sendOtp() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty || phone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter a valid phone number")));
+      return;
+    }
+    
+    // Attempt to send a real SMS via Supabase Auth providers
+    try {
+      await _supabase.auth.signInWithOtp(
+        phone: phone,
+        shouldCreateUser: true, // This effectively registers them in auth.users too
+      );
+      
+      setState(() {
+        _otpSent = true;
+      });
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Verification code sent to your phone via SMS"),
+          backgroundColor: AppTheme.primaryGreen,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error sending SMS. Ensure you've enabled a phone provider in Supabase: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _verifyOtp() async {
+    final phone = _phoneController.text.trim();
+    final token = _otpController.text.trim();
+    
+    try {
+      final res = await _supabase.auth.verifyOTP(
+        phone: phone,
+        token: token,
+        type: OtpType.sms,
+      );
+      
+      if (res.session != null || res.user != null) {
+        setState(() => _isVerified = true);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Phone number verified!"), backgroundColor: AppTheme.primaryGreen),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Invalid or expired OTP code: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   /// Submits the registration form to the Supabase backend.
   /// Validates input, constructs the payload, and performs an async network request.
   Future<void> _submitForm() async {
-    // Check if all fields satisfy their validator logic
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) return;
+    
+    if (_profileImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please upload a profile photo")));
+      return;
+    }
 
-      try {
-        // Asynchronously insert the robust driver data profile into the database
-        await _supabase.from('drivers').insert({
-          'driver_name': _nameController.text.trim(),
-          'driver_id_code': _idController.text.trim(),
-          'jeep_id': _jeepController.text.trim(),
-          'username': _usernameController.text.trim(),
-          'password': _passwordController.text.trim(),
-          'status': 'Active', // Defaults to active so drivers can immediately access the dashboard
-          'rating': 5.0,
-        });
+    if (!_isVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please verify your phone number using the OTP")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Upload Profile Photo
+      final fileName = "profile_${const Uuid().v4()}";
+      String ext = path.extension(_profileImage!.name);
+      if (ext.isEmpty) ext = '.jpg';
+      final filePath = "profile-pictures/$fileName$ext";
+      
+      final bytes = await _profileImage!.readAsBytes();
+      await _supabase.storage.from('incident-images').uploadBinary(
+        filePath, 
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      final imageUrl = _supabase.storage.from('incident-images').getPublicUrl(filePath);
+
+      // 2. Create Driver Record
+      await _supabase.from('drivers').insert({
+        'driver_name': _nameController.text.trim(),
+        'driver_id_code': _idController.text.trim(),
+        'jeep_id': _jeepController.text.trim(),
+        'username': _usernameController.text.trim(),
+        'password': _passwordController.text.trim(),
+        'phone_number': _phoneController.text.trim(),
+        'image_url': imageUrl,
+        'status': 'Active',
+        'rating': 5.0,
+      });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +190,6 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
-    }
   }
 
   @override
@@ -100,7 +210,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           SizedBox.expand(
             child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
           ),
-          Container(color: Colors.black.withOpacity(0.75)),
+          Container(color: Colors.black.withValues(alpha: 0.75)),
 
           SafeArea(
             child: Center(
@@ -127,6 +237,23 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                           fontSize: 14,
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      // Profile Image Picker
+                      Center(
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white.withValues(alpha: 0.15),
+                            backgroundImage: _profileImage != null ? FileImage(File(_profileImage!.path)) : null,
+                            child: _profileImage == null
+                                ? const Icon(Icons.add_a_photo, color: Colors.white70, size: 30)
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text("Upload Profile Photo", textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 12)),
                       const SizedBox(height: 30),
 
                       _buildTextField(_nameController, "Full Name", Icons.person, "Enter your full name"),
@@ -134,6 +261,38 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                       _buildTextField(_idController, "NIC / Driver ID", Icons.badge, "Enter your ID (e.g. NIC or License)"),
                       const SizedBox(height: 16),
                       _buildTextField(_jeepController, "Jeep License Plate", Icons.directions_car, "Enter vehicle plate"),
+                      const SizedBox(height: 30),
+
+                      const Text(
+                        "Security Verification",
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(_phoneController, "Phone Number", Icons.phone, "Enter phone number")),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: _isVerified ? null : _sendOtp,
+                            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGreen),
+                            child: Text(_otpSent ? "Resend" : "Send OTP"),
+                          ),
+                        ],
+                      ),
+                      if (_otpSent && !_isVerified) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(child: _buildTextField(_otpController, "Enter OTP", Icons.lock_clock, "Enter code")),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: _verifyOtp,
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                              child: const Text("Verify"),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 30),
 
                       const Text(
@@ -185,7 +344,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
         labelStyle: const TextStyle(color: Colors.white70),
         prefixIcon: Icon(icon, color: Colors.white70),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -210,7 +369,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword), // Toggle password visibility state
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

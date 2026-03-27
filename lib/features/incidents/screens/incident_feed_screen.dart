@@ -17,8 +17,6 @@ class _IncidentFeedScreenState extends State<IncidentFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recent Park Incidents'),
@@ -110,7 +108,7 @@ class _IncidentFeedScreenState extends State<IncidentFeedScreen> {
                             width: double.infinity,
                             height: 180,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                            errorBuilder: (_, error, stackTrace) => const SizedBox.shrink(),
                           ),
                         ),
                       ],

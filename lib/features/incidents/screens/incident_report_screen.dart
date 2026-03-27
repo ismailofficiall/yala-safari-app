@@ -222,7 +222,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         final payload = {
           "title": "${incidentType!} - ${DateTime.now().toIso8601String()}",
           "type": incidentType,
-          "note": noteController.text + "\n[OFFLINE SYNCED DATA]",
+          "note": "${noteController.text}\n[OFFLINE SYNCED DATA]",
           "image_url": null, // Safely discard blob binary logic for critical local caches
           "latitude": latitude ?? 0.0,
           "longitude": longitude ?? 0.0,
@@ -270,7 +270,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: incidentType,
+                  initialValue: incidentType,
                   hint: const Text("Select severity parameter"),
                   items: incidentTypes.map((type) {
                     return DropdownMenuItem(value: type, child: Text(type));
@@ -291,7 +291,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                     margin: const EdgeInsets.only(top: 20),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                     ),
                     clipBehavior: Clip.hardEdge,
                     child: Stack(
@@ -327,7 +327,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95), 
+                              color: Colors.white.withValues(alpha: 0.95), 
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                             ),

@@ -194,7 +194,7 @@ class AdminParkMap extends StatelessWidget {
                         '${item['image_url']}',
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Text("Failed to load image", style: TextStyle(color: Colors.red)),
+                        errorBuilder: (_, error, stackTrace) => const Text("Failed to load image", style: TextStyle(color: Colors.red)),
                       ),
                     ),
                 ],

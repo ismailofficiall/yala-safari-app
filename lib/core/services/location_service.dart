@@ -13,11 +13,13 @@
 ///    It holds Driver profiles, Incident reports, and Audit logs, which 
 ///    require complex SQL querying, table joins, and row-level security.
 /// =========================================================================
+library;
 
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'offline_sync_service.dart';
 
@@ -32,8 +34,6 @@ class LocationService {
   /// Cooldown timer for proximity zone warnings (prevents repeated alerts)
   DateTime? _lastProximityAlert;
   
-  /// Known restricted zone boundaries (loaded once per session)
-  final List<Map<String, dynamic>> _zoneBoundaries = [];
 
   /// Whether periodic tracking is active
   bool get isTracking => _timer != null;
@@ -52,13 +52,13 @@ class LocationService {
     int intervalSeconds = 10,
   }) async {
     _db = FirebaseDatabase.instanceFor(app: Firebase.app(), databaseURL: databaseUrl);
-    print('[LocationService] startTracking for $driverId, DB: $databaseUrl');
+    debugPrint('[LocationService] startTracking for $driverId, DB: $databaseUrl');
 
     // Ensure we have permission before starting the timer
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('[LocationService] location services disabled');
+        debugPrint('[LocationService] location services disabled');
         // Do not start the timer if services are off.
         return;
       }
@@ -66,15 +66,15 @@ class LocationService {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        print('[LocationService] permission request result: $permission');
+        debugPrint('[LocationService] permission request result: $permission');
         if (permission == LocationPermission.denied) return;
       }
       if (permission == LocationPermission.deniedForever) {
-        print('[LocationService] permission deniedForever');
+        debugPrint('[LocationService] permission deniedForever');
         return;
       }
     } catch (e) {
-      print('[LocationService] permission check error: $e');
+      debugPrint('[LocationService] permission check error: $e');
       return;
     }
 
@@ -103,20 +103,20 @@ class LocationService {
       // Double-check services & permissions before reading
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('[LocationService] location services disabled (sendNow)');
+        debugPrint('[LocationService] location services disabled (sendNow)');
         return;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        print(
+        debugPrint(
           '[LocationService] permission request result (sendNow): $permission',
         );
         if (permission == LocationPermission.denied) return;
       }
       if (permission == LocationPermission.deniedForever) {
-        print('[LocationService] permission deniedForever (sendNow)');
+        debugPrint('[LocationService] permission deniedForever (sendNow)');
         return;
       }
 
@@ -133,7 +133,7 @@ class LocationService {
         "timestamp": DateTime.now().toIso8601String(),
       };
 
-      print(
+      debugPrint(
         '[LocationService] POSITION: lat=${pos.latitude}, lng=${pos.longitude}',
       );
       
@@ -147,7 +147,7 @@ class LocationService {
 
       await _db!.ref('drivers/$driverId/location').set(payload);
     } catch (e, st) {
-      print('[LocationService] sendLocationNow error: $e\n$st');
+      debugPrint('[LocationService] sendLocationNow error: $e\n$st');
     }
   }
 
@@ -171,9 +171,9 @@ class LocationService {
         "created_at": DateTime.now().toIso8601String(),
         "is_resolved": false,
       });
-      print('[LocationService] Automatically reported speeding incident!');
+      debugPrint('[LocationService] Automatically reported speeding incident!');
     } catch (e) {
-      print("[LocationService] Failed to auto-report speeding: $e");
+      debugPrint("[LocationService] Failed to auto-report speeding: $e");
     }
   }
 
@@ -214,18 +214,18 @@ class LocationService {
             'created_at': DateTime.now().toIso8601String(),
             'is_resolved': false,
           });
-          print('[LocationService] Zone proximity alert triggered for ${zone['name']}');
+          debugPrint('[LocationService] Zone proximity alert triggered for ${zone['name']}');
           break; // Only raise one alert per cycle
         }
       }
     } catch (e) {
-      print('[LocationService] Proximity check failed: $e');
+      debugPrint('[LocationService] Proximity check failed: $e');
     }
   }
 
   /// Stop periodic tracking
   void stopTracking() {
-    print('[LocationService] stopTracking');
+    debugPrint('[LocationService] stopTracking');
     _timer?.cancel();
     _timer = null;
   }

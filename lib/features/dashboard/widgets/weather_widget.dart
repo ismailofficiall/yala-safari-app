@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../core/constants/app_theme.dart';
 
 /// Fetches and displays a live weather widget for Yala National Park.
 /// Uses the Open-Meteo free API — no API key required.
@@ -90,7 +89,7 @@ class _YalaWeatherWidgetState extends State<YalaWeatherWidget> {
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
+          BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 6)),
         ],
       ),
       child: _loading

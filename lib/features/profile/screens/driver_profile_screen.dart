@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/translations/app_translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
 /// Screen responsible for displaying specific data bound to the logged-in driver.
 /// It reads the driver ID passed via routing, and fetches their realtime 
@@ -37,7 +40,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       final response = await Supabase.instance.client
           .from('drivers')
           .select()
-          .eq('id', int.parse(widget.driverId))
+          .eq('id', widget.driverId)
           .maybeSingle();
 
       if (mounted) {
@@ -55,6 +58,73 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
 
   /// Evaluates SharedPreferences cache to enforce the mandatory 14-day profile lockout rule.
   /// If permitted, renders a modal dialog mutating the `driver_name` and `jeep_id` directly in Supabase.
+  Future<void> _pickAndUploadImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? lastEditStr = prefs.getString('last_profile_edit_${widget.driverId}');
+    
+    if (lastEditStr != null) {
+      final lastEdit = DateTime.parse(lastEditStr);
+      final difference = DateTime.now().difference(lastEdit).inDays;
+      if (difference < 14) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Profile editing locked. You can update your photo in ${14 - difference} days."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+    
+    if (picked == null) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final fileName = "profile_${widget.driverId}_${const Uuid().v4()}";
+      String ext = path.extension(picked.name);
+      if (ext.isEmpty) ext = '.jpg';
+
+      final filePath = "profile-pictures/$fileName$ext";
+      final bytes = await picked.readAsBytes();
+
+      // Upload to bucket
+      await Supabase.instance.client.storage
+          .from("incident-images") // Using incident-images bucket as a fallback/verified bucket
+          .uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      final imageUrl = Supabase.instance.client.storage
+          .from("incident-images")
+          .getPublicUrl(filePath);
+
+      // Update driver record
+      await Supabase.instance.client
+          .from('drivers')
+          .update({'image_url': imageUrl})
+          .eq('id', widget.driverId);
+
+      // Save edit timestamp
+      await prefs.setString('last_profile_edit_${widget.driverId}', DateTime.now().toIso8601String());
+
+      await _fetchProfile();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile photo updated successfully")));
+    } catch (e) {
+      debugPrint("Photo upload failure: $e");
+      if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Upload failed: $e"), backgroundColor: Colors.red));
+      }
+    }
+  }
+
   Future<void> _handleProfileEdit() async {
     final prefs = await SharedPreferences.getInstance();
     final String? lastEditStr = prefs.getString('last_profile_edit_${widget.driverId}');
@@ -109,7 +179,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                       'driver_name': nameCtrl.text.trim(),
                       'jeep_id': jeepCtrl.text.trim()
                     })
-                    .eq('id', int.parse(widget.driverId));
+                    .eq('id', widget.driverId);
                 
                 // Burn the 14-day cooldown timestamp into local NVRAM
                 await prefs.setString('last_profile_edit_${widget.driverId}', DateTime.now().toIso8601String());
@@ -153,6 +223,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     // Final State: Validly bind parsed Postgres row data into strong string constants
     final String name = driverData?['driver_name'] ?? 'Unknown Driver';
     final String nic = driverData?['driver_id_code'] ?? 'N/A';
+    final String phone = driverData?['phone_number'] ?? 'N/A';
     final String jeepId = driverData?['jeep_id'] ?? 'N/A';
     final String status = driverData?['status'] ?? 'Active';
     final double rating = (driverData?['rating'] ?? 5.0).toDouble();
@@ -174,11 +245,43 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Generic Profile Picture Avatar element
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: AppTheme.primaryGreen,
-              child: Icon(Icons.person, size: 60, color: Colors.white),
+            // Profile Picture with upload trigger
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 65,
+                  backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                    backgroundImage: driverData?['image_url'] != null 
+                        ? NetworkImage(driverData!['image_url']) 
+                        : null,
+                    child: driverData?['image_url'] == null 
+                        ? const Icon(Icons.person, size: 60, color: AppTheme.primaryGreen) 
+                        : null,
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: _pickAndUploadImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))
+                        ],
+                      ),
+                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Text(
@@ -191,7 +294,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: status == 'Active' ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                color: status == 'Active' ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -211,7 +314,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardTheme.color ?? Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
               ),
               child: Row(
                 children: [
@@ -279,6 +382,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 children: [
                   _infoRow("Driver ID (NIC)", nic),
                   const Divider(height: 24),
+                  _infoRow("Phone Number", phone),
+                  const Divider(height: 24),
                   _infoRow("Assigned Jeep", jeepId),
                 ],
               ),
@@ -298,10 +403,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

@@ -9,6 +9,7 @@
 /// hundreds of files. By centralizing the Color constants and `ThemeData` here, 
 /// changing the brand identity takes only a few seconds globally.
 /// =========================================================================
+library;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

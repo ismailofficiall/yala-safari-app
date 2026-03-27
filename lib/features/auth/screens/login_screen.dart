@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             child: Image.asset("assets/images/login_bg.png", fit: BoxFit.cover),
           ),
           // Dark overlay
-          Container(color: Colors.black.withOpacity(0.6)),
+          Container(color: Colors.black.withValues(alpha: 0.6)),
 
           SafeArea(
             child: CustomScrollView(
@@ -221,13 +221,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   child: Container(
                     height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TabBar(
                       controller: _tabController,
                       indicator: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       indicatorSize: TabBarIndicatorSize.tab,
@@ -261,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withValues(alpha: 0.2),
                                 labelText: AppTranslations.t('username'),
                                 labelStyle: const TextStyle(color: Colors.white70),
                                 prefixIcon: const Icon(Icons.person_outline, color: Colors.white70),
@@ -275,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withValues(alpha: 0.2),
                                 labelText: AppTranslations.t('password'),
                                 labelStyle: const TextStyle(color: Colors.white70),
                                 prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
@@ -329,7 +329,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withValues(alpha: 0.2),
                                 labelText: 'Admin Email',
                                 labelStyle: const TextStyle(color: Colors.white70),
                                 prefixIcon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white70),
@@ -343,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withValues(alpha: 0.2),
                                 labelText: 'Password',
                                 labelStyle: const TextStyle(color: Colors.white70),
                                 prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),

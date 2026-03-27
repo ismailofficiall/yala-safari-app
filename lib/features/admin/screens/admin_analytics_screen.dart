@@ -159,7 +159,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           decoration: BoxDecoration(
                             color: AdminTheme.surface,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.black.withOpacity(0.05)),
+                            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                           ),
                           child: Row(
                             children: [
@@ -175,7 +175,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                                 child: LinearProgressIndicator(
                                   value: rating / 5.0,
                                   color: rating >= 4 ? AdminTheme.primaryGreen : rating >= 3 ? Colors.orange : Colors.red,
-                                  backgroundColor: Colors.black.withOpacity(0.05),
+                                  backgroundColor: Colors.black.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(4),
                                   minHeight: 8,
                                 ),
@@ -187,7 +187,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           ),
                         ),
                       );
-                    }).toList(), // also fix the missing toList() since it's a spread
+                    }),
                   ], // Close Column's children
                 ), // Close Column
               ), // Close SingleChildScrollView
@@ -209,7 +209,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       decoration: BoxDecoration(
         color: AdminTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: BarChart(
         BarChartData(
@@ -258,7 +258,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       decoration: BoxDecoration(
         color: AdminTheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: data.entries.map((entry) {
@@ -274,7 +274,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     value: ratio,
                     minHeight: 12,
                     color: _typeColor(entry.key),
-                    backgroundColor: Colors.black.withOpacity(0.05),
+                    backgroundColor: Colors.black.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
@@ -306,8 +306,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         decoration: BoxDecoration(
           color: AdminTheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.2)),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           children: [

@@ -81,40 +81,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
                   final page = _pages[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(36),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Colored icon in a large circle container
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: page.color.withOpacity(0.12),
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(36),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Colored icon in a large circle container
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: page.color.withValues(alpha: 0.12),
+                            ),
+                            child: Icon(page.icon, size: 72, color: page.color),
                           ),
-                          child: Icon(page.icon, size: 72, color: page.color),
-                        ),
-                        const SizedBox(height: 40),
-                        Text(
-                          page.title,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.darkText,
+                          const SizedBox(height: 40),
+                          Text(
+                            page.title,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.darkText,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          page.subtitle,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.greyText,
-                            height: 1.5,
+                          const SizedBox(height: 16),
+                          Text(
+                            page.subtitle,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: AppTheme.greyText,
+                              height: 1.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -132,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
-                    color: _currentPage == i ? AppTheme.primaryGreen : AppTheme.greyText.withOpacity(0.3),
+                    color: _currentPage == i ? AppTheme.primaryGreen : AppTheme.greyText.withValues(alpha: 0.3),
                   ),
                 );
               }),

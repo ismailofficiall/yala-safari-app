@@ -168,7 +168,7 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -190,7 +190,7 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
             const SizedBox(height: 8),
             // Dropdown to choose from predefined Yala fauna list
             DropdownButtonFormField<String>(
-              value: _selectedAnimal,
+              initialValue: _selectedAnimal,
               hint: const Text("Select animal"),
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: _animals.map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
@@ -218,7 +218,7 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
                   label: Text(b),
                   selected: selected,
                   onSelected: (_) => setState(() => _selectedBehaviour = b),
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.15),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.15),
                   checkmarkColor: AppTheme.primaryGreen,
                 );
               }).toList(),

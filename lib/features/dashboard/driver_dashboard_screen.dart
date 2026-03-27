@@ -14,6 +14,7 @@
 /// `initState()` and subsequently destroyed during `dispose()` to prevent
 /// memory leaks.
 /// =========================================================================
+library;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -57,7 +58,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   void initState() {
     super.initState();
     _locationService = LocationService();
-    _location_service_start();
+    _startLocationService();
     _listenForSos();
   }
 
@@ -130,7 +131,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
     );
   }
 
-  void _location_service_start() {
+  void _startLocationService() {
     if (widget.driverId.isEmpty) return;
     try {
       _locationService.startTracking(widget.driverId);
@@ -491,7 +492,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: Colors.red.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 8)),
+            BoxShadow(color: Colors.red.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 8)),
           ],
         ),
         child: Column(
@@ -500,7 +501,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             const SizedBox(height: 6),
             const Text('SOS EMERGENCY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.5)),
             const SizedBox(height: 4),
-            Text('Hold to activate panic alert', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+            Text('Hold to activate panic alert', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
           ],
         ),
       ),

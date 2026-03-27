@@ -20,6 +20,7 @@ class _AddDriverScreenState extends State<AddDriverScreen> {
   // Credentials for the newly registered driver
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   String _status = 'Active';
   bool _isLoading = false;
@@ -31,6 +32,7 @@ class _AddDriverScreenState extends State<AddDriverScreen> {
     _jeepController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -45,6 +47,7 @@ class _AddDriverScreenState extends State<AddDriverScreen> {
           'jeep_id': _jeepController.text.trim(),
           'username': _usernameController.text.trim(),
           'password': _passwordController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
           'status': _status,
           'rating': 5.0,
         });
@@ -130,6 +133,8 @@ class _AddDriverScreenState extends State<AddDriverScreen> {
                 }).toList(),
                 onChanged: (newValue) => setState(() => _status = newValue!),
               ),
+              const SizedBox(height: 15),
+              _buildTextField(_phoneController, "Phone Number", Icons.phone, "Please enter a phone number"),
               const SizedBox(height: 30),
               
               _buildSectionTitle(context, 'Login Credentials'),

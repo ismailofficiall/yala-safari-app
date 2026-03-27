@@ -40,7 +40,7 @@ class SpeedViolationHistoryScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 72, color: AppTheme.primaryGreen.withOpacity(0.5)),
+                  Icon(Icons.check_circle_outline, size: 72, color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   const Text("No speed violations recorded!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 8),
@@ -61,9 +61,9 @@ class SpeedViolationHistoryScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.05),
+                    color: Colors.red.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.red.withOpacity(0.2)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
                   ),
                   child: ListTile(
                     leading: const CircleAvatar(

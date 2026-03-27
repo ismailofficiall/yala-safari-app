@@ -50,7 +50,7 @@ class AdminAuditLogScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history_rounded, size: 64, color: AdminTheme.primaryGreen.withOpacity(0.4)),
+                  Icon(Icons.history_rounded, size: 64, color: AdminTheme.primaryGreen.withValues(alpha: 0.4)),
                   const SizedBox(height: 16),
                   const Text("No audit events yet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 8),
@@ -97,11 +97,11 @@ class AdminAuditLogScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AdminTheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: color.withOpacity(0.15)),
+                    border: Border.all(color: color.withValues(alpha: 0.15)),
                   ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: color.withOpacity(0.12),
+                      backgroundColor: color.withValues(alpha: 0.12),
                       child: Icon(icon, color: color, size: 20),
                     ),
                     title: Text(action, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),

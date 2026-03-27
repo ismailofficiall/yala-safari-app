@@ -194,14 +194,15 @@ class AdminDashboardScreen extends StatelessWidget {
                           backgroundColor: isLowRating
                               ? Colors.red.withValues(alpha: 0.12)
                               : AdminTheme.lightGreen.withValues(alpha: 0.2),
-                          child: Text(
+                          backgroundImage: d['image_url'] != null ? NetworkImage(d['image_url']) : null,
+                          child: d['image_url'] == null ? Text(
                             ratingLabel,
                             style: TextStyle(
                               color: isLowRating ? const Color(0xFFC62828) : AdminTheme.primaryGreen,
                               fontWeight: FontWeight.w800,
                               fontSize: 14,
                             ),
-                          ),
+                          ) : null,
                         ),
                         title: Text('${d['driver_name']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                         subtitle: Padding(

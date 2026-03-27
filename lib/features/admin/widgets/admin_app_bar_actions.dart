@@ -23,7 +23,7 @@ class AdminAppBarActions extends StatelessWidget {
                   tooltip: 'Inbox',
                   style: IconButton.styleFrom(
                     foregroundColor: AdminTheme.darkText,
-                    backgroundColor: AdminTheme.primaryGreen.withOpacity(0.12),
+                    backgroundColor: AdminTheme.primaryGreen.withValues(alpha: 0.12),
                   ),
                 ),
                 if (unreadCount > 0)
@@ -52,7 +52,7 @@ class AdminAppBarActions extends StatelessWidget {
             tooltip: 'Sign out',
             style: IconButton.styleFrom(
               foregroundColor: AdminTheme.darkText,
-              backgroundColor: AdminTheme.primaryGreen.withOpacity(0.12),
+              backgroundColor: AdminTheme.primaryGreen.withValues(alpha: 0.12),
             ),
           ),
         ),

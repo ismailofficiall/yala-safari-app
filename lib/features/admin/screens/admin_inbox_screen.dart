@@ -67,17 +67,17 @@ class _AdminInboxScreenState extends State<AdminInboxScreen> {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: threadedDrivers.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final driverId = threadedDrivers[index];
               final latestMsg = latestMessages[driverId]!;
               final unread = unreadCounts[driverId] ?? 0;
               
               return ListTile(
-                tileColor: unread > 0 ? AdminTheme.primaryGreen.withOpacity(0.05) : AdminTheme.surface,
+                tileColor: unread > 0 ? AdminTheme.primaryGreen.withValues(alpha: 0.05) : AdminTheme.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.black.withOpacity(0.05)),
+                  side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
                 ),
                 leading: CircleAvatar(
                   backgroundColor: unread > 0 ? Colors.red : AdminTheme.primaryGreen,
