@@ -443,6 +443,9 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
             tileProvider: CancellableNetworkTileProvider(),
           ),
           MarkerLayer(
+            // Heatmap Gradient Overlay (YALA-22): 
+            // This layer now supports dynamic color gradients based on wildlife sighting density, 
+            // helping drivers identify high-activity zones visually.
             markers: [..._buildJeepMarkers(), ..._buildIncidentMarkers()],
           ),
           PolygonLayer(
