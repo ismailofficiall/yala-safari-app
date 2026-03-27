@@ -22,6 +22,8 @@ class LocationService {
   /// Cooldown timer for proximity zone warnings (prevents repeated alerts)
   DateTime? _lastProximityAlert;
   
+  /// Battery-efficient polling interval for cloud writes (e.g. 15-20 seconds)
+  static const int _reportIntervalSeconds = 18; 
 
   /// Whether periodic tracking is active
   bool get isTracking => _timer != null;
@@ -37,7 +39,7 @@ class LocationService {
   /// This method now requests permissions immediately and does a first write.
   Future<void> startTracking(
     String driverId, {
-    int intervalSeconds = 10,
+    int intervalSeconds = _reportIntervalSeconds,
   }) async {
     if (driverId.isEmpty) {
       debugPrint('[LocationService] startTracking: driverId is empty');
