@@ -101,14 +101,14 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.red[800],
         title: Row(
-          children: const [
-            Icon(Icons.sos, color: Colors.white, size: 30),
-            SizedBox(width: 8),
-            Text("NEARBY SOS ALERT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          children: [
+            const Icon(Icons.sos, color: Colors.white, size: 30),
+            const SizedBox(width: 8),
+            Text(AppTranslations.t('sos_alert_title'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Text(
-          "A fellow driver nearby has triggered an SOS Emergency!\n\n${record['title']}\nDistance: < 5km",
+          "${AppTranslations.t('sos_alert_body')}\n\n${record['title']}\nDistance: < 5km",
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
@@ -120,11 +120,11 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 focusLocation: LatLng((record['latitude'] as num).toDouble(), (record['longitude'] as num).toDouble()),
               )));
             },
-            child: const Text("VIEW ON MAP", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(AppTranslations.t('view_on_map'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("DISMISS", style: TextStyle(color: Colors.white70)),
+            child: Text(AppTranslations.t('dismiss'), style: const TextStyle(color: Colors.white70)),
           ),
         ],
       ),
@@ -250,7 +250,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'ACTIVE SHIFT',
+                      AppTranslations.t('active_shift'),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.w800,
@@ -260,7 +260,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Driver Status',
+                    AppTranslations.t('driver_status'),
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppTheme.darkText,
@@ -269,7 +269,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Your location is currently being shared with the park operations center.',
+                    AppTranslations.t('location_sharing_msg'),
                     style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.greyText, height: 1.4),
                   ),
                 ],
@@ -277,7 +277,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ),
             
             const SizedBox(height: 26),
-            Text('Vehicle info', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(AppTranslations.t('vehicle_info'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 14),
             
             Row(
@@ -298,7 +298,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             _buildSosButton(context),
             const SizedBox(height: 32),
 
-            Text('Quick actions', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(AppTranslations.t('quick_actions'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 14),
 
             _buildActionItem(
@@ -334,8 +334,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 final activeCount = allIncidents.length;
 
                 final label = activeCount > 0 
-                    ? "Park Incidents Feed ($activeCount active)"
-                    : "Park Incidents Feed";
+                    ? "${AppTranslations.t('park_incidents')} ($activeCount active)"
+                    : AppTranslations.t('park_incidents');
 
                 return _buildActionItem(
                   context: context,
@@ -353,7 +353,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
 
             _buildActionItem(
               context: context,
-              label: 'Log Wildlife Encounter',
+              label: AppTranslations.t('log_wildlife'),
               icon: Icons.pets_rounded,
               color: Colors.teal,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WildlifeLogScreen(driverId: widget.driverId))),
@@ -363,7 +363,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             // Driver leaderboard link
             _buildActionItem(
               context: context,
-              label: 'Driver Leaderboard',
+              label: AppTranslations.t('leaderboard'),
               icon: Icons.leaderboard_rounded,
               color: AppTheme.accentGold,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverLeaderboardScreen())),
@@ -373,7 +373,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             // Speed violation history for this driver
             _buildActionItem(
               context: context,
-              label: 'My Speed Violations',
+              label: AppTranslations.t('my_speeding'),
               icon: Icons.speed_rounded,
               color: Colors.deepOrange,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpeedViolationHistoryScreen(driverId: widget.driverId))),
@@ -390,8 +390,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 final unreadCount = allMessages.where((m) => m['is_read'] != true).length;
 
                 final label = unreadCount > 0 
-                    ? "${AppTranslations.t('View Messages')} ($unreadCount pending)"
-                    : AppTranslations.t('View Messages');
+                    ? "${AppTranslations.t('view_messages')} ($unreadCount pending)"
+                    : AppTranslations.t('view_messages');
 
                 return _buildActionItem(
                   context: context,
@@ -499,9 +499,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           children: [
             const Icon(Icons.sos_rounded, color: Colors.white, size: 40),
             const SizedBox(height: 6),
-            const Text('SOS EMERGENCY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.5)),
+            Text(AppTranslations.t('sos_panic_title'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.5)),
             const SizedBox(height: 4),
-            Text('Hold to activate panic alert', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
+            Text(AppTranslations.t('sos_panic_hint'), style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
           ],
         ),
       ),

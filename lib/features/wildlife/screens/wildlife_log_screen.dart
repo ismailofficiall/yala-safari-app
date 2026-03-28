@@ -8,9 +8,8 @@ import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/services/supabase_client.dart';
+import '../../../core/translations/app_translations.dart';
 
-/// Screen allowing drivers to log wildlife encounters separately from incidents.
-/// Records the animal species, count, behaviour, GPS stub, and timestamp in Supabase.
 class WildlifeLogScreen extends StatefulWidget {
   final String driverId;
   const WildlifeLogScreen({super.key, required this.driverId});
@@ -25,47 +24,26 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
   String? _selectedAnimal;
   String _selectedBehaviour = 'Grazing';
   bool _loading = false;
-
   XFile? _pickedMedia;
   bool _isVideo = false;
   final ImagePicker _picker = ImagePicker();
 
-  /// Categorical list of animals commonly spotted inside Yala
-  final List<String> _animals = [
-    'Leopard', 'Elephant', 'Sloth Bear', 'Crocodile', 'Water Buffalo',
-    'Painted Stork', 'Peacock', 'Spotted Deer', 'Jungle Fowl', 'Monitor Lizard',
-    'Wild Boar', 'Grey Langur', 'Jackal', 'Python', 'Other',
-  ];
-
-  final List<String> _behaviours = [
-    'Grazing', 'Hunting', 'Moving', 'Resting', 'Aggressive', 'With Cubs/Young',
-  ];
+  final List<String> _animals = ['Leopard', 'Elephant', 'Sloth Bear', 'Crocodile', 'Water Buffalo', 'Painted Stork', 'Peacock', 'Spotted Deer', 'Jungle Fowl', 'Monitor Lizard', 'Wild Boar', 'Grey Langur', 'Jackal', 'Python', 'Other'];
+  final List<String> _behaviours = ['Grazing', 'Hunting', 'Moving', 'Resting', 'Aggressive', 'With Cubs/Young'];
 
   Future<void> _pickMedia({required bool isVideo, required ImageSource source}) async {
-    final picked = isVideo 
-        ? await _picker.pickVideo(source: source)
-        : await _picker.pickImage(source: source);
-    if (picked != null) {
-      setState(() {
-        _pickedMedia = picked;
-        _isVideo = isVideo;
-      });
-    }
+    final picked = isVideo ? await _picker.pickVideo(source: source) : await _picker.pickImage(source: source);
+    if (picked != null) setState(() { _pickedMedia = picked; _isVideo = isVideo; });
   }
 
   Future<String?> _uploadMedia() async {
     if (_pickedMedia == null) return null;
     try {
       final fileName = const Uuid().v4();
-      String ext = path.extension(_pickedMedia!.name);
-      if (ext.isEmpty) ext = _isVideo ? '.mp4' : '.jpg';
+      final ext = path.extension(_pickedMedia!.name).isEmpty ? (_isVideo ? '.mp4' : '.jpg') : path.extension(_pickedMedia!.name);
       final filePath = "wildlife/$fileName$ext";
       final bytes = await _pickedMedia!.readAsBytes();
-
-      await SupabaseConfig.client.storage
-          .from("incident-images")
-          .uploadBinary(filePath, bytes, fileOptions: const FileOptions(upsert: true));
-
+      await SupabaseConfig.client.storage.from("incident-images").uploadBinary(filePath, bytes, fileOptions: const FileOptions(upsert: true));
       return SupabaseConfig.client.storage.from("incident-images").getPublicUrl(filePath);
     } catch (e) {
       debugPrint("Media upload failed: $e");
@@ -73,58 +51,29 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
     }
   }
 
-  /// Submits the wildlife sighting record to the `wildlife_logs` table in Supabase
   Future<void> _submitLog() async {
     if (_selectedAnimal == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select an animal species")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTranslations.t('select_animal') ?? "Select animal")));
       return;
     }
-
     setState(() => _loading = true);
-
     try {
-      // Attempt to retrieve current GPS coordinates for accurate mapping
       double? lat, lng;
       try {
         final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-        lat = pos.latitude;
-        lng = pos.longitude;
-      } catch (e) {
-        debugPrint('GPS failed for wildlife log: $e');
-      }
+        lat = pos.latitude; lng = pos.longitude;
+      } catch (_) {}
 
-      // Yala National Park approximate bounds
-      const double minLat = 6.1500;
-      const double maxLat = 6.5500;
-      const double minLng = 81.1000;
-      const double maxLng = 81.6000;
-
+      const double minLat = 6.1500, maxLat = 6.5500, minLng = 81.1000, maxLng = 81.6000;
       if (lat != null && lng != null) {
-        final double closestLat = lat.clamp(minLat, maxLat);
-        final double closestLng = lng.clamp(minLng, maxLng);
-
-        final double distanceToPerimeter = Geolocator.distanceBetween(
-          lat, lng, closestLat, closestLng,
-        );
-
-        if (distanceToPerimeter > 5000) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Cannot log wildlife: You are >5km away from Yala."),
-                backgroundColor: Colors.red,
-              ),
-            );
-            setState(() => _loading = false);
-          }
-          return;
+        final dist = Geolocator.distanceBetween(lat, lng, lat.clamp(minLat, maxLat), lng.clamp(minLng, maxLng));
+        if (dist > 5000) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Too far from Yala Park"), backgroundColor: Colors.red));
+          setState(() => _loading = false); return;
         }
       }
 
-      // Upload media if present
       String? mediaUrl = await _uploadMedia();
-
-      // Insert new row into the wildlife_logs Postgres table
       await Supabase.instance.client.from('wildlife_logs').insert({
         'driver_id': widget.driverId,
         'animal': _selectedAnimal,
@@ -133,18 +82,15 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
         'notes': _notesCtrl.text.trim(),
         'latitude': lat,
         'longitude': lng,
-        'image_url': mediaUrl, // Dynamic column handling
+        'image_url': mediaUrl,
         'logged_at': DateTime.now().toIso8601String(),
       });
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Wildlife encounter logged successfully!"), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Wildlife Logged!"), backgroundColor: Colors.green));
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to log: $e"), backgroundColor: Colors.red));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed: $e"), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -153,148 +99,60 @@ class _WildlifeLogScreenState extends State<WildlifeLogScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Log Wildlife Encounter", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(AppTranslations.t('log_wildlife') ?? "Log Wildlife", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header info banner
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.pets, color: AppTheme.primaryGreen),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      "Record a wildlife encounter for park biodiversity tracking",
-                      style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w600),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(AppTranslations.t('animal_species') ?? "Animal Species", style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      items: _animals.map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
+                      onChanged: (v) => setState(() => _selectedAnimal = v),
+                      decoration: InputDecoration(filled: true, fillColor: Colors.grey.shade50, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
+                      hint: Text(AppTranslations.t('select_animal') ?? "Select"),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Text(AppTranslations.t('number_spotted') ?? "Count", style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 12),
+                    TextField(controller: _countCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(filled: true, fillColor: Colors.grey.shade50, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none))),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
-
-            const Text("Animal Species", style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            // Dropdown to choose from predefined Yala fauna list
-            DropdownButtonFormField<String>(
-              initialValue: _selectedAnimal,
-              hint: const Text("Select animal"),
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: _animals.map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
-              onChanged: (v) => setState(() => _selectedAnimal = v),
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Number Spotted", style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _countCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "1"),
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Behaviour Observed", style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            // Scrollable behaviour selection chips
-            Wrap(
-              spacing: 8,
-              children: _behaviours.map((b) {
-                final selected = _selectedBehaviour == b;
-                return FilterChip(
-                  label: Text(b),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _selectedBehaviour = b),
-                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.15),
-                  checkmarkColor: AppTheme.primaryGreen,
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Upload Evidence (Photo/Video)", style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
+            Text(AppTranslations.t('behaviour') ?? "Behaviour", style: const TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, children: _behaviours.map((b) => FilterChip(label: Text(b), selected: _selectedBehaviour == b, onSelected: (_) => setState(() => _selectedBehaviour = b), selectedColor: AppTheme.primaryGreen.withOpacity(0.2), checkmarkColor: AppTheme.primaryGreen)).toList()),
+            const SizedBox(height: 24),
             if (_pickedMedia != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                height: 140,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey.shade200,
-                  image: _isVideo ? null : DecorationImage(
-                    fit: BoxFit.cover,
-                    image: kIsWeb ? NetworkImage(_pickedMedia!.path) : FileImage(File(_pickedMedia!.path)) as ImageProvider,
-                  ),
-                ),
-                child: _isVideo 
-                    ? const Center(child: Icon(Icons.videocam, size: 48, color: Colors.grey))
-                    : null,
-              ),
+              Container(margin: const EdgeInsets.only(bottom: 16), height: 160, decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), image: _isVideo ? null : DecorationImage(fit: BoxFit.cover, image: kIsWeb ? NetworkImage(_pickedMedia!.path) : FileImage(File(_pickedMedia!.path)) as ImageProvider), color: Colors.grey.shade200), child: _isVideo ? const Center(child: Icon(Icons.videocam, size: 48)) : null),
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickMedia(isVideo: false, source: ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt, size: 18),
-                    label: const Text("Photo"),
-                  ),
-                ),
+                Expanded(child: OutlinedButton.icon(onPressed: () => _pickMedia(isVideo: false, source: ImageSource.camera), icon: const Icon(Icons.camera_alt), label: Text(AppTranslations.t('photo') ?? "Photo"))),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickMedia(isVideo: true, source: ImageSource.camera),
-                    icon: const Icon(Icons.videocam, size: 18),
-                    label: const Text("Video"),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickMedia(isVideo: false, source: ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library, size: 18),
-                    label: const Text("Gallery"),
-                  ),
-                ),
+                Expanded(child: OutlinedButton.icon(onPressed: () => _pickMedia(isVideo: true, source: ImageSource.camera), icon: const Icon(Icons.videocam), label: Text(AppTranslations.t('video') ?? "Video"))),
               ],
             ),
-            const SizedBox(height: 20),
-
-            const Text("Additional Notes (Optional)", style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _notesCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "Describe the sighting in detail..."),
-            ),
+            const SizedBox(height: 24),
+            TextField(controller: _notesCtrl, maxLines: 3, decoration: InputDecoration(labelText: AppTranslations.t('notes') ?? "Notes", border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)))),
             const SizedBox(height: 32),
-
             SizedBox(
-              width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 onPressed: _loading ? null : _submitLog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    : const Text("Submit Log", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGreen, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                child: _loading ? const CircularProgressIndicator(color: Colors.white) : Text(AppTranslations.t('submit') ?? "Submit Log", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

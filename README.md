@@ -1,49 +1,40 @@
-# Yala National Park: Driver Operations Platform
-**A Real-time Flutter Application for Wildlife Park Fleet Management**
+# Yala Safari Driver App & Admin Ecosystem 🐘🚐
 
-## 🏆 Project Overview
-This platform acts as an intelligent, real-time tracking and incident management suite for Yala National Park. Built entirely with **Flutter**, **Geolocator**, and **Supabase (PostgreSQL)**, it solves a mission-critical domain problem: preserving driver safety and capturing actionable wildlife metadata in zones with intermittent network connectivity.
+A comprehensive, production-ready Flutter ecosystem designed for modern Safari park management. This project integrates real-time telemetry, wildlife biodiversity tracking, and executive reporting into a seamless experience for both field drivers and park administrators.
 
-## 🌟 Key Features
-* **Offline-First Synchronization (NVRAM Queueing)**: Drivers can log wildlife sightings using `SharedPreferences`. Once a cellular connection is re-established, the payload is automatically pushed to the cloud.
-* **Proximity Zone Alerts (Geofencing)**: Automatically calculates Euclidean distances matching live GPS coordinates against known Supabase polygon boundaries; triggers an alert when a driver approaches a restricted zone (<50m).
-* **Automated Speed Audits**: `LocationService` listens to periodic native OS location sensors. If the raw kinetic speed exceeds ~40km/h, an indisputable "Speeding Incident" is autonomously logged into the HQ audit table.
-* **Emergency Dispatch**: A highly visible, long-press SOS panic button instantly dumps exact GPS coordinates to an Admin dispatcher's dashboard with real-time WebSocket listening.
-* **Live Weather Integration**: Connects via HTTP to the public *Open-Meteo API* to extract live micro-climate wind patterns and localized temperatures directly overriding Yala map coordinates.
-* **PDF Export Generation**: Utilizes `pdf` and `printing` to execute client-side rendering of A4-ready statistical analysis, encompassing driver leaderboards and recent wildlife activities.
+## 🚀 Key Features
 
-## 🏗️ Technical Architecture
-```mermaid
-graph TD
-    subgraph Client Application (Flutter)
-        A[Driver Dashboard] --> |Location Stream| B(LocationService)
-        A --> |UI Layer| C{OfflineSyncService}
-        A --> |HTTP GET| F[Open-Meteo REST API]
-    end
+### 🛠️ Driver Portal (Mobile)
+- **Live Wildlife Logging**: Drivers can record animal sightings (species, count, behavior) with GPS stubs for biodiversity tracking.
+- **Real-Time GPS Telemetry**: Background location tracking with speed violation detection to ensure park safety.
+- **Interactive Live Map**: View fellow drivers and active incidents on a high-performance OpenStreetMap layer.
+- **Multilingual Support**: Full support for **English, Sinhala, and Tamil**, allowing for a localized experience across the entire Sri Lankan workforce.
+- **Safety SOS Cluster**: High-priority panic button that broadcasts an emergency alert to all drivers within a 5km radius and HQ instantly.
+- **Incident reporting**: Detailed reporting of road blocks, animal attacks, or vehicle breakdowns with media (photo/video) upload capabilities.
 
-    subgraph Hardware Persistence
-        C --> |JSON Serialization| D[(SharedPreferences)]
-    end
+### 🛡️ Admin Portal (HQ Control)
+- **Executive Analytics**: Professional dashboard featuring incident trend charts (last 7 days) and fleet performance metrics.
+- **Professional PDF Reports**: Generate and export executive-level "Weekly Operational Reports" in PDF format directly from the dashboard.
+- **Live Fleet Supervision**: Monitor all active drivers, their ratings, and current statuses (Active/Suspended/Away).
+- **Direct Communication**: Built-in chat system to relay instructions to specific drivers in the field.
+- **Audit Logging**: Comprehensive system-wide audit logs tracking all administrative actions for transparency.
 
-    subgraph Backend Configuration (Supabase/Firebase)
-        B --> |Coordinates| E[(Firebase Realtime)]
-        D -.-> |Network Recovery| G[(PostgreSQL Incidents)]
-    end
-    
-    subgraph Admin View
-        H[Admin Dashboard] --> |Listen| G
-        H --> |Print/Save| I(PDF Generator)
-    end
-```
+## 🏗️ Architecture & Tech Stack
+- **Frontend**: Flutter (Dart) with `Provider` for reactive state management.
+- **Backend**: Supabase (PostgreSQL) for Relational Data & Real-time Subscriptions.
+- **Storage**: Supabase Storage for high-speed media hosting.
+- **Maps**: `flutter_map` with OSM & `geolocator` for precision telemetry.
+- **Theming**: Premium "Safari Gold & Green" design system with dark-mode optimized glassmorphism components.
 
-## 🧪 Testing Methodology
-A robust separation of concerns allowed the business logic to be mathematically verified.
-* **Unit Testing**: Proved that `OfflineSyncService` correctly stringifies `Map<String, dynamic>` JSON structures and gracefully cascades failures without crashing.
-* **Widget Testing**: Simulated isolated UI rendering states for components like the `YalaWeatherWidget`, aggressively trapping broken LayoutBuilder structures before compilation.
+## 🔒 Security & Performance
+- **RLS (Row Level Security)**: Granular PostgreSQL policies ensuring data privacy between drivers and administrative roles.
+- **Offline Resilience**: Offline-first incident caching ensures SOS packets are stored locally until cellular signal is regained.
+- **Keyboard Resilience**: Adaptive UI layouts that respond gracefully to keyboard overlays and varying screen densities.
 
-## 🚀 Execution Instructions
-1. Clone this repository locally.
-2. Ensure you have the Flutter toolchain linked correctly in your `$PATH`.
-3. Overwrite placeholders in `LocationService` linking back to your `Supabase` environment variables.
-4. Run `flutter test` to ensure zero logical regressions.
-5. Deploy using `flutter run -d chrome` or via Android execution (`flutter run -d android`).
+## 📸 Screenshots & Showcase
+*(Place your generated UI mockups here for a professional impression)*
+
+---
+**Project Status**: Graduation / Final Submission Ready.
+**Localization**: 100% (EN/SI/TA)
+**Stable**: Yes

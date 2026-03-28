@@ -31,18 +31,20 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   /// Fetches both incident and driver data from Supabase for chart computation
   Future<void> _loadData() async {
     try {
-      final incidents = await _supabase.from('incidents').select().order('created_at', ascending: false);
-      final drivers = await _supabase.from('drivers').select().order('rating', ascending: false);
-      if (mounted) {
-        setState(() {
-          _incidents = List<Map<String, dynamic>>.from(incidents);
-          _drivers = List<Map<String, dynamic>>.from(drivers);
-          _loading = false;
-        });
-      }
+      final incidentData = await _supabase.from('incidents').select().order('created_at', ascending: false);
+      if (mounted) setState(() => _incidents = List<Map<String, dynamic>>.from(incidentData));
     } catch (e) {
-      if (mounted) setState(() => _loading = false);
+      debugPrint("Analytics: Incidents failed to load - $e");
     }
+
+    try {
+      final driverData = await _supabase.from('drivers').select().order('rating', ascending: false);
+      if (mounted) setState(() => _drivers = List<Map<String, dynamic>>.from(driverData));
+    } catch (e) {
+      debugPrint("Analytics: Drivers failed to load - $e");
+    }
+
+    if (mounted) setState(() => _loading = false);
   }
 
   /// Groups incidents by day for the last 7 days and returns counts per day label
@@ -123,12 +125,11 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Summary stats row
                     Row(
                       children: [
                         _statCard('Total Incidents', '${_incidents.length}', AdminTheme.primaryGreen),
                         const SizedBox(width: 12),
-                        _statCard('Active Drivers', '${_drivers.where((d) => d['status'] == 'Active').length}', Colors.blue),
+                        _statCard('Total Drivers', '${_drivers.length}', Colors.blue),
                       ],
                     ),
                     const SizedBox(height: 28),

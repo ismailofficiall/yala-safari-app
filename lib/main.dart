@@ -74,10 +74,6 @@ class DriverApp extends StatelessWidget {
       routes: {
         '/splash': (c) => const SplashScreen(),
         '/': (c) => const LoginScreen(),
-        
-        // Example argument passing to a route. In a full production app,
-        // the driverId would be fetched dynamically from Supabase Auth state.
-        '/dashboard': (c) => const DriverDashboardScreen(driverId: "driver_001"),
         '/incident': (c) => const IncidentReportScreen(),
       },
     );
