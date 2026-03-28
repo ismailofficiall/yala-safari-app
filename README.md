@@ -4,7 +4,7 @@ A comprehensive, production-ready Flutter ecosystem designed for modern Safari p
 
 ##  Key Features
 
-### 🛠️ Driver Portal (Mobile)
+###  Driver Portal (Mobile)
 - **Live Wildlife Logging**: Drivers can record animal sightings (species, count, behavior) with GPS stubs for biodiversity tracking.
 - **Real-Time GPS Telemetry**: Background location tracking with speed violation detection to ensure park safety.
 - **Interactive Live Map**: View fellow drivers and active incidents on a high-performance OpenStreetMap layer.
