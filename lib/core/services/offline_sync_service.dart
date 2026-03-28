@@ -9,6 +9,7 @@ import 'supabase_client.dart';
 class OfflineSyncService {
   /// Defines the key used to store the serialized JSON queue inside SQLite/UserDefaults
   static const String key = 'offline_incidents';
+  static bool _isSyncing = false;
 
   /// Serializes an incident payload into a JSON string and pushes it onto
   /// the local hardware SharedPreferences buffer.
@@ -32,6 +33,9 @@ class OfflineSyncService {
   /// each serialized packet to the remote Supabase Postgres table.
   /// Safe to call periodically as it dynamically handles network rejection natively.
   static Future<void> syncPendingIncidents() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    
     final prefs = await SharedPreferences.getInstance();
     List<String> existing = prefs.getStringList(key) ?? [];
     
@@ -63,5 +67,6 @@ class OfflineSyncService {
 
     // Overwrite the hardware memory. If all succeeded, `failed` is purely empty.
     await prefs.setStringList(key, failed);
+    _isSyncing = false;
   }
 }
