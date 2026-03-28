@@ -1,8 +1,8 @@
-# Yala Safari Driver App & Admin Ecosystem 🐘🚐
+# Yala Safari Driver App & Admin Ecosystem 
 
 A comprehensive, production-ready Flutter ecosystem designed for modern Safari park management. This project integrates real-time telemetry, wildlife biodiversity tracking, and executive reporting into a seamless experience for both field drivers and park administrators.
 
-## 🚀 Key Features
+##  Key Features
 
 ### 🛠️ Driver Portal (Mobile)
 - **Live Wildlife Logging**: Drivers can record animal sightings (species, count, behavior) with GPS stubs for biodiversity tracking.
@@ -12,29 +12,23 @@ A comprehensive, production-ready Flutter ecosystem designed for modern Safari p
 - **Safety SOS Cluster**: High-priority panic button that broadcasts an emergency alert to all drivers within a 5km radius and HQ instantly.
 - **Incident reporting**: Detailed reporting of road blocks, animal attacks, or vehicle breakdowns with media (photo/video) upload capabilities.
 
-### 🛡️ Admin Portal (HQ Control)
+###  Admin Portal (HQ Control)
 - **Executive Analytics**: Professional dashboard featuring incident trend charts (last 7 days) and fleet performance metrics.
 - **Professional PDF Reports**: Generate and export executive-level "Weekly Operational Reports" in PDF format directly from the dashboard.
 - **Live Fleet Supervision**: Monitor all active drivers, their ratings, and current statuses (Active/Suspended/Away).
 - **Direct Communication**: Built-in chat system to relay instructions to specific drivers in the field.
 - **Audit Logging**: Comprehensive system-wide audit logs tracking all administrative actions for transparency.
 
-## 🏗️ Architecture & Tech Stack
+##  Architecture & Tech Stack
 - **Frontend**: Flutter (Dart) with `Provider` for reactive state management.
 - **Backend**: Supabase (PostgreSQL) for Relational Data & Real-time Subscriptions.
 - **Storage**: Supabase Storage for high-speed media hosting.
 - **Maps**: `flutter_map` with OSM & `geolocator` for precision telemetry.
 - **Theming**: Premium "Safari Gold & Green" design system with dark-mode optimized glassmorphism components.
 
-## 🔒 Security & Performance
+##  Security & Performance
 - **RLS (Row Level Security)**: Granular PostgreSQL policies ensuring data privacy between drivers and administrative roles.
 - **Offline Resilience**: Offline-first incident caching ensures SOS packets are stored locally until cellular signal is regained.
 - **Keyboard Resilience**: Adaptive UI layouts that respond gracefully to keyboard overlays and varying screen densities.
 
-## 📸 Screenshots & Showcase
-*(Place your generated UI mockups here for a professional impression)*
 
----
-**Project Status**: Graduation / Final Submission Ready.
-**Localization**: 100% (EN/SI/TA)
-**Stable**: Yes
