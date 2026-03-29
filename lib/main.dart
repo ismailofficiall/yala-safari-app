@@ -1,5 +1,6 @@
 // Entry Point of the Yala Safari Driver Application
 // Handles core initialization and global status management.
+// Status: [FINAL COURSEWORK SUBMISSION - MARCH 2026]
 
 
 import 'package:flutter/material.dart';
